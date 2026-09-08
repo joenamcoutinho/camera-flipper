@@ -1,0 +1,30 @@
+name: Deploy to Oracle VM
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: http://145.241.226.235:8000
+
+    steps:
+      - name: Deploy to Oracle VM
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            cd ~/camera-flipper
+            git pull origin main
+            source venv/bin/activate
+            pip install -q -r requirements.txt
+            python rescore.py
+            sudo systemctl restart camera-flipper
+            echo "Deployment complete"
