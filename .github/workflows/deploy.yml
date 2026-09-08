@@ -28,8 +28,8 @@ jobs:
             --exclude='__pycache__' --exclude='.env' --exclude='deploy_log.txt' \
             --exclude='camera-flipper' --exclude='.github' \
             ./ /tmp/deploy/
-          cd /tmp/deploy && tar -czf camera-flipper-deploy.tar.gz .
-          ls -lh camera-flipper-deploy.tar.gz
+          cd /tmp && tar -czf deploy/camera-flipper-deploy.tar.gz -C deploy --exclude='camera-flipper-deploy.tar.gz' .
+          ls -lh /tmp/deploy/camera-flipper-deploy.tar.gz
 
       - name: Set up SSH
         run: |
