@@ -15,34 +15,41 @@ jobs:
       url: http://145.241.226.235:8000
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Prepare deploy archive
+        run: |
+          mkdir -p /tmp/deploy
+          # Copy only code files, excluding git/venv/db/caches
+          rsync -a --exclude='.git' --exclude='venv' --exclude='*.db*' \
+            --exclude='__pycache__' --exclude='.env' --exclude='deploy_log.txt' \
+            --exclude='camera-flipper' --exclude='.github' \
+            ./ /tmp/deploy/
+          cd /tmp/deploy && tar -czf camera-flipper-deploy.tar.gz .
+          ls -lh camera-flipper-deploy.tar.gz
+
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/vm_key
           chmod 600 ~/.ssh/vm_key
-          ssh-keyscan -T 10 -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -T 10 -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts || true
 
-      - name: Deploy
+      - name: Deploy to VM
         run: |
+          scp -i ~/.ssh/vm_key -o ConnectTimeout=15 -o BatchMode=yes \
+            /tmp/deploy/camera-flipper-deploy.tar.gz \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:~/camera-flipper-deploy.tar.gz
+
           ssh -i ~/.ssh/vm_key -o ConnectTimeout=15 -o BatchMode=yes \
             ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} '
             set -e
-            echo "STEP: checking for git"
-            if ! command -v git >/dev/null 2>&1; then
-              echo "STEP: installing git"
-              sudo -n dnf install -y git < /dev/null
-            fi
-            echo "STEP: cd project"
+            echo "STEP: extracting archive"
             cd ~/camera-flipper
-            if [ ! -d .git ]; then
-              echo "STEP: git init + remote"
-              git init
-              git remote add origin https://github.com/joenamcoutinho/camera-flipper.git
-            fi
-            echo "STEP: fetch"
-            git fetch origin main
-            echo "STEP: reset --hard"
-            git reset --hard origin/main
+            tar -xzf ~/camera-flipper-deploy.tar.gz
             echo "STEP: pip install"
             source venv/bin/activate
             pip install -q -r requirements.txt
