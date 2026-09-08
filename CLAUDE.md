@@ -73,6 +73,16 @@ to the VM, patches settings, installs deps, restarts the systemd service, and
 re-scores the queue. Output goes to `deploy_log.txt`. Details and the manual
 equivalent are in `docs/DEPLOYMENT.md`.
 
+SSH in with:
+
+```
+ssh -i keys/vm-ssh.key opc@145.241.226.235
+cd ~/camera-flipper && source venv/bin/activate    # every new shell needs this
+```
+
+Full SSH notes, including phone access and the Windows permissions fix, are in
+`docs/DEPLOYMENT.md`.
+
 **The VM runs Python 3.9.** Do not use 3.10+ syntax or stdlib arguments. This
 has broken deploys twice: `str | None` union types, and `Path.write_text(newline=)`.
 

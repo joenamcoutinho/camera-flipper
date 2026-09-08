@@ -123,6 +123,11 @@ SETTING_DEFS = {
         "label": "Hide cards below expected profit (£)",
         "help": "-999 shows everything. Set to 0 to only see listings expected to make money.",
     },
+    "theme_light": {
+        "type": "bool", "env": None, "default": "0",
+        "label": "Light theme",
+        "help": "Off = dark theme, On = light theme.",
+    },
 }
 
 

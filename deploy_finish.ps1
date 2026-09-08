@@ -1,7 +1,7 @@
 # Pushes the current code to the VM, restarts the service and re-scores.
 # Safe to run any time - the database migrates itself, so this never wipes
 # your swipe history, your blocked models or your settings.
-$key  = "C:\Users\joenam_tangi0\Documents\camera-flipper\camera-flipper\ssh-key-2026-09-03.key"
+$key  = "C:\Users\joenam_tangi0\Documents\camera-flipper\keys\vm-ssh.key"
 $vm   = "opc@145.241.226.235"
 $here = "C:\Users\joenam_tangi0\Documents\camera-flipper"
 

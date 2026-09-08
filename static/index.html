@@ -23,6 +23,21 @@
     --radius:20px;
     --safe-b:env(safe-area-inset-bottom, 0px);
   }
+  html.light-theme {
+    --bg:#f8f9fa;
+    --surface:#ffffff;
+    --surface-2:#f0f2f5;
+    --surface-3:#e5e7eb;
+    --ink:#1a1d23;
+    --ink-2:#4b5563;
+    --ink-3:#7b8491;
+    --line:rgba(0,0,0,0.06);
+    --line-2:rgba(0,0,0,0.12);
+    --buy:#37d399;
+    --unsure:#f5b544;
+    --pass:#f2604c;
+    --accent:#5b9dff;
+  }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body {
     margin:0; padding:0; height:100%; background:var(--bg); color:var(--ink);
@@ -1017,6 +1032,7 @@ async function loadSetup(){
       await fetch('/api/settings', {method:'POST', headers:{'Content-Type':'application/json'},
                                     body: JSON.stringify({values})});
       toast('Settings saved');
+      applyTheme();
       loadNext(); refreshStats();
     } catch(e) { toast('Save failed'); }
   };
@@ -1128,6 +1144,15 @@ async function doLookup(){
     </div>`).join('');
 }
 
+/* ================= theme ================= */
+async function applyTheme(){
+  try {
+    const cfg = await fetch('/api/settings').then(r => r.json());
+    const isLight = cfg.values.theme_light === '1' || cfg.values.theme_light === true;
+    document.documentElement.classList.toggle('light-theme', isLight);
+  } catch(e) {}
+}
+
 /* ================= navigation ================= */
 let currentView = 'swipe';
 const TITLES = { swipe:'Flick Yeah', auctions:'Auctions', buys:'Kept', history:'History',
@@ -1154,6 +1179,7 @@ async function refreshStats(){
   } catch(e) {}
 }
 
+applyTheme();
 loadNext();
 refreshStats();
 setInterval(() => { if (currentView === 'swipe' && !current) loadNext(); }, 30000);

@@ -1,5 +1,72 @@
 # Deployment
 
+## Connecting to the VM
+
+The private key lives at `keys/vm-ssh.key` in the project folder. It is
+git-ignored (both `keys/` and `*.key`). There is no passphrase.
+
+### From Windows (PowerShell)
+
+```powershell
+ssh -i "C:\Users\joenam_tangi0\Documents\camera-flipper\keys\vm-ssh.key" opc@145.241.226.235
+```
+
+First connection asks about the host fingerprint — answer `yes`.
+
+If it refuses with **"UNPROTECTED PRIVATE KEY FILE"**, Windows permissions are
+too open. Lock the file to your account and retry:
+
+```powershell
+icacls "C:\Users\joenam_tangi0\Documents\camera-flipper\keys\vm-ssh.key" /inheritance:r
+icacls "C:\Users\joenam_tangi0\Documents\camera-flipper\keys\vm-ssh.key" /grant:r "$($env:USERNAME):(R)"
+```
+
+### From macOS / Linux
+
+```bash
+chmod 600 /path/to/vm-ssh.key
+ssh -i /path/to/vm-ssh.key opc@145.241.226.235
+```
+
+### From Android
+
+Install **JuiceSSH** from the Play Store (Termux's maintained build is no
+longer distributed there). Get `vm-ssh.key` onto the phone, then: Identities →
+new → import the key file; Connections → new → address `145.241.226.235`,
+port 22, username `opc`, and pick that identity.
+
+### Once connected
+
+```bash
+cd ~/camera-flipper
+source venv/bin/activate          # needed every new shell before running anything
+
+sudo systemctl status camera-flipper     # is it running?
+sudo systemctl restart camera-flipper    # restart after a manual change
+journalctl -u camera-flipper -f          # live log: scans, errors, API usage
+python rescore.py                        # re-analyse + re-score, no API calls
+
+sqlite3 camera_flipper.db                # poke at the data directly
+```
+
+**A fresh SSH session starts in the home directory with no virtualenv active.**
+Forgetting `cd ~/camera-flipper && source venv/bin/activate` produces
+`ModuleNotFoundError: No module named 'dotenv'`, which looks like a broken
+install but isn't.
+
+Never run `python webapp.py` by hand while the service is running — the port
+is already bound and you'll get `address already in use`. Use systemctl.
+
+### One-liners from your own machine
+
+```powershell
+# tail the live log without logging in
+ssh -i "C:\Users\joenam_tangi0\Documents\camera-flipper\keys\vm-ssh.key" opc@145.241.226.235 'journalctl -u camera-flipper -f'
+
+# is the service healthy?
+ssh -i "C:\Users\joenam_tangi0\Documents\camera-flipper\keys\vm-ssh.key" opc@145.241.226.235 'systemctl is-active camera-flipper'
+```
+
 ## The server
 
 | | |
@@ -40,20 +107,20 @@ deploy never wipes swipe history, blocked models or settings.
 ### Manual equivalent
 
 ```bash
-scp -i <key> webapp.py db.py schema.sql signals.py cli.py scoring.py \
+scp -i keys/vm-ssh.key webapp.py db.py schema.sql signals.py cli.py scoring.py \
     camera_knowledge.py ebay_client.py requirements.txt update_env.py \
     rescore.py opc@145.241.226.235:~/camera-flipper/
-scp -i <key> -r static opc@145.241.226.235:~/camera-flipper/
-ssh -i <key> opc@145.241.226.235 \
+scp -i keys/vm-ssh.key -r static opc@145.241.226.235:~/camera-flipper/
+ssh -i keys/vm-ssh.key opc@145.241.226.235 \
   "cd ~/camera-flipper && source venv/bin/activate && \
    pip install -q -r requirements.txt && python rescore.py"
-ssh -i <key> opc@145.241.226.235 "sudo systemctl restart camera-flipper"
+ssh -i keys/vm-ssh.key opc@145.241.226.235 "sudo systemctl restart camera-flipper"
 ```
 
 ### Watching it
 
 ```bash
-ssh -i <key> opc@145.241.226.235 'journalctl -u camera-flipper -f'
+ssh -i keys/vm-ssh.key opc@145.241.226.235 'journalctl -u camera-flipper -f'
 ```
 
 ## Networking
