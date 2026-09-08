@@ -28,7 +28,7 @@ jobs:
             --exclude='__pycache__' --exclude='.env' --exclude='deploy_log.txt' \
             --exclude='camera-flipper' --exclude='.github' \
             ./ /tmp/deploy/
-          cd /tmp && tar -czf deploy/camera-flipper-deploy.tar.gz -C deploy --exclude='camera-flipper-deploy.tar.gz' .
+          cd /tmp && tar --ignore-failed-read -czf deploy/camera-flipper-deploy.tar.gz -C deploy --exclude='camera-flipper-deploy.tar.gz' .
           ls -lh /tmp/deploy/camera-flipper-deploy.tar.gz
 
       - name: Set up SSH
