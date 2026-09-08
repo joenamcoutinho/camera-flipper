@@ -1,0 +1,30 @@
+# ---------------------------------------------------------------------------
+# SECRETS - never commit these. The project folder contains real credentials.
+# ---------------------------------------------------------------------------
+.env
+.env.backup*
+*.key
+*.key.pub
+*.pem
+id_rsa*
+
+# Local database and its WAL sidecars (contains your swipe history, not code)
+*.db
+*.db-wal
+*.db-shm
+
+# Runtime / build noise
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+deploy_log.txt
+
+# The stale duplicate of the project that lives inside the project folder.
+# It is an old snapshot and was the cause of a real deployment bug - do not
+# commit it, and ideally delete it (see docs/GOTCHAS.md).
+camera-flipper/
+
+# OS junk
+Thumbs.db
+.DS_Store

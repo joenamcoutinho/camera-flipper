@@ -1,0 +1,1162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<title>Flick Yeah</title>
+<style>
+  :root {
+    --bg:#0b0d12;
+    --surface:#151922;
+    --surface-2:#1d222d;
+    --surface-3:#262c3a;
+    --ink:#eceef3;
+    --ink-2:#a6adbb;
+    --ink-3:#6b7382;
+    --line:rgba(255,255,255,0.07);
+    --line-2:rgba(255,255,255,0.13);
+    --buy:#37d399;
+    --unsure:#f5b544;
+    --pass:#f2604c;
+    --accent:#5b9dff;
+    --radius:20px;
+    --safe-b:env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body {
+    margin:0; padding:0; height:100%; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+    font-size:16px; overscroll-behavior:none;
+  }
+  body { display:flex; flex-direction:column; height:100dvh; }
+  button { font-family:inherit; }
+
+  /* ---------- header ---------- */
+  header {
+    flex:0 0 auto; display:flex; align-items:center; gap:10px;
+    padding:12px 16px 10px; border-bottom:1px solid var(--line);
+    background:var(--bg);
+  }
+  header h1 { font-size:16px; font-weight:650; margin:0; letter-spacing:-0.01em; flex:1; }
+  .pill {
+    font-size:12px; font-weight:600; color:var(--ink-2); background:var(--surface-2);
+    border:1px solid var(--line); border-radius:999px; padding:5px 11px;
+    font-variant-numeric:tabular-nums; white-space:nowrap;
+  }
+  .icon-btn {
+    background:var(--surface-2); border:1px solid var(--line); color:var(--ink-2);
+    border-radius:12px; width:36px; height:34px; font-size:15px; cursor:pointer;
+    display:grid; place-items:center; padding:0;
+  }
+  .icon-btn:active { background:var(--surface-3); }
+  .icon-btn[disabled] { opacity:0.35; }
+
+  /* ---------- layout ---------- */
+  main { flex:1 1 auto; position:relative; overflow:hidden; }
+  .view { position:absolute; inset:0; display:none; flex-direction:column; }
+  .view.active { display:flex; }
+  .scroller { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 16px 24px; }
+
+  /* ---------- bottom nav ---------- */
+  nav {
+    flex:0 0 auto; display:flex; border-top:1px solid var(--line);
+    background:var(--bg); padding-bottom:var(--safe-b);
+  }
+  nav button {
+    flex:1; background:none; border:none; color:var(--ink-3); padding:9px 2px 8px;
+    font-size:10px; font-weight:600; letter-spacing:0.02em; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+  }
+  nav button .ic { font-size:17px; line-height:1; }
+  nav button.active { color:var(--ink); }
+  nav button .badge {
+    position:absolute; transform:translate(14px,-4px); background:var(--accent);
+    color:#04101f; font-size:9px; font-weight:800; border-radius:999px;
+    padding:1px 5px; min-width:16px;
+  }
+
+  /* ---------- swipe card ---------- */
+  #stage { flex:1; position:relative; padding:12px 14px 0; min-height:0; }
+  .card {
+    position:absolute; inset:12px 14px 0; background:var(--surface);
+    border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
+    display:flex; flex-direction:column; box-shadow:0 18px 40px rgba(0,0,0,0.45);
+    touch-action:pan-y; will-change:transform;
+  }
+  /* Photo shrinks out of the way once you start reading, so a long
+     description gets close to the full screen instead of a letterbox. */
+  .photo {
+    position:relative; flex:0 0 32vh; min-height:170px; background:#000;
+    transition:flex-basis 0.22s ease, min-height 0.22s ease;
+  }
+  .photo.compact { flex-basis:88px; min-height:88px; }
+  .photo.compact .count { display:none; }
+  .photo.empty { flex:0 0 62px; min-height:62px; }
+  .photo img { width:100%; height:100%; object-fit:cover; display:block; }
+  .photo .nophoto {
+    width:100%; height:100%; display:grid; place-items:center;
+    color:var(--ink-3); font-size:13px; background:var(--surface-2);
+  }
+  .photo::after {
+    content:''; position:absolute; inset:auto 0 0 0; height:70px;
+    background:linear-gradient(to top, rgba(11,13,18,0.95), transparent); pointer-events:none;
+  }
+  .badges { position:absolute; top:12px; left:12px; right:12px; display:flex; gap:6px; flex-wrap:wrap; z-index:2; }
+  .badge-tag {
+    font-size:10.5px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase;
+    padding:5px 9px; border-radius:8px; backdrop-filter:blur(8px);
+  }
+  .badge-tag.BUY { background:rgba(55,211,153,0.92); color:#04170f; }
+  .badge-tag.UNSURE { background:rgba(245,181,68,0.92); color:#1d1400; }
+  .badge-tag.PASS { background:rgba(242,96,76,0.92); color:#1f0600; }
+  .badge-tag.info { background:rgba(91,157,255,0.9); color:#03142b; }
+  .badge-tag.warn { background:rgba(255,255,255,0.14); color:#fff; }
+  .photo .count {
+    position:absolute; bottom:10px; right:12px; z-index:2; font-size:11px; font-weight:600;
+    background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); padding:4px 9px; border-radius:999px; color:#fff;
+  }
+  .stamp {
+    position:absolute; top:18px; z-index:3; font-size:24px; font-weight:900; letter-spacing:0.08em;
+    padding:5px 13px; border:3.5px solid; border-radius:10px; opacity:0; pointer-events:none;
+  }
+  .stamp.pass { left:14px; color:var(--pass); border-color:var(--pass); transform:rotate(-13deg); }
+  .stamp.buy { right:14px; color:var(--buy); border-color:var(--buy); transform:rotate(13deg); }
+  .stamp.unsure { left:50%; margin-left:-52px; color:var(--unsure); border-color:var(--unsure); }
+
+  /* every photo the seller uploaded, not just the first - condition is
+     mostly judged from pictures, so they need to be one tap away */
+  .thumbs {
+    flex:0 0 auto; display:flex; gap:6px; padding:8px 12px; overflow-x:auto;
+    background:var(--surface); border-bottom:1px solid var(--line);
+    scrollbar-width:none; transition:max-height 0.22s ease, padding 0.22s ease;
+    max-height:64px;
+  }
+  .thumbs::-webkit-scrollbar { display:none; }
+  .thumbs.hidden { max-height:0; padding-top:0; padding-bottom:0; overflow:hidden; }
+  .thumbs img {
+    width:46px; height:46px; flex:0 0 auto; border-radius:9px; object-fit:cover;
+    opacity:0.45; border:2px solid transparent; cursor:pointer; background:var(--surface-3);
+  }
+  .thumbs img.active { opacity:1; border-color:var(--accent); }
+
+  .cardbody { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 16px 20px; }
+  .model { font-size:19px; font-weight:700; margin:0 0 2px; letter-spacing:-0.015em; line-height:1.25; }
+  .fulltitle { font-size:12.5px; color:var(--ink-3); line-height:1.45; margin-bottom:12px; }
+  .pricerow { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .price { font-size:26px; font-weight:750; font-variant-numeric:tabular-nums; letter-spacing:-0.02em; }
+  .price-note { font-size:12.5px; color:var(--ink-2); }
+  .metrics { display:flex; gap:7px; margin-bottom:16px; }
+  .metric { flex:1; background:var(--surface-2); border:1px solid var(--line); border-radius:13px; padding:9px 10px; }
+  .metric .k { font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-3); font-weight:700; margin-bottom:3px; }
+  .metric .v { font-size:16px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-0.01em; }
+  .sec { margin-bottom:16px; }
+  .sec-h {
+    font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-3);
+    font-weight:700; margin-bottom:7px; display:flex; align-items:center; gap:7px;
+  }
+  .sec-h::after { content:''; flex:1; height:1px; background:var(--line); }
+  /* the description: full width, readable size, real line spacing.
+     no more squinting at a tiny scroll box. */
+  .desc {
+    font-size:15px; line-height:1.65; color:#dfe3ea; white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .desc.clamped { max-height:340px; overflow:hidden; mask-image:linear-gradient(to bottom,#000 72%,transparent); }
+  .showmore {
+    margin-top:8px; background:var(--surface-2); border:1px solid var(--line-2); color:var(--ink);
+    border-radius:10px; padding:9px 14px; font-size:13px; font-weight:600; width:100%; cursor:pointer;
+  }
+  .reasoning { font-size:13.5px; line-height:1.6; color:var(--ink-2); white-space:pre-wrap; }
+  .metaline { font-size:12px; color:var(--ink-3); margin-top:4px; }
+  a.ebay {
+    display:inline-flex; align-items:center; gap:6px; margin-top:6px; font-size:13.5px;
+    font-weight:600; color:var(--accent); text-decoration:none;
+    background:rgba(91,157,255,0.1); border:1px solid rgba(91,157,255,0.25);
+    padding:9px 14px; border-radius:11px;
+  }
+
+  /* ---------- action bar ---------- */
+  .actions { flex:0 0 auto; padding:10px 14px calc(10px + var(--safe-b)); }
+  .noterow { display:flex; gap:8px; margin-bottom:9px; }
+  .noterow input {
+    flex:1; background:var(--surface); border:1px solid var(--line); border-radius:13px;
+    color:var(--ink); padding:11px 13px; font-size:14px; font-family:inherit; min-width:0;
+  }
+  .noterow input::placeholder { color:var(--ink-3); }
+  .btnrow { display:flex; gap:10px; }
+  .btnrow button {
+    flex:1; border-radius:17px; padding:15px 0; font-size:21px; font-weight:700;
+    background:var(--surface); border:1px solid var(--line-2); color:var(--ink); cursor:pointer;
+    transition:transform 0.08s ease;
+  }
+  .btnrow button:active { transform:scale(0.94); }
+  .btnrow .b-pass { color:var(--pass); }
+  .btnrow .b-unsure { color:var(--unsure); font-size:18px; }
+  .btnrow .b-buy { color:var(--buy); }
+
+  /* ---------- reject reason sheet ---------- */
+  .sheet {
+    position:fixed; left:0; right:0; bottom:0; z-index:60; background:var(--surface);
+    border-top:1px solid var(--line-2); border-radius:22px 22px 0 0;
+    padding:16px 16px calc(16px + var(--safe-b)); box-shadow:0 -14px 40px rgba(0,0,0,0.5);
+    transform:translateY(110%); transition:transform 0.26s cubic-bezier(0.32,0.72,0,1);
+    max-height:82vh; overflow-y:auto;
+  }
+  .sheet.up { transform:translateY(0); }
+  .sheet-h { display:flex; align-items:center; margin-bottom:12px; gap:10px; }
+  .sheet-h .t { font-size:15px; font-weight:700; flex:1; }
+  .chips { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:13px; }
+  .chip {
+    background:var(--surface-2); border:1px solid var(--line-2); color:var(--ink-2);
+    border-radius:999px; padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .chip.on { background:var(--accent); border-color:var(--accent); color:#03142b; }
+  .blockbox { background:var(--surface-2); border:1px solid var(--line); border-radius:14px; padding:12px 13px; margin-bottom:12px; }
+  .switchrow { display:flex; align-items:center; gap:12px; }
+  .switchrow + .switchrow { margin-top:11px; padding-top:11px; border-top:1px solid var(--line); }
+  .switchrow .lbl { flex:1; font-size:13.5px; line-height:1.35; }
+  .switchrow .sub { font-size:11.5px; color:var(--ink-3); margin-top:2px; }
+  .switch {
+    flex:0 0 auto; width:46px; height:27px; border-radius:999px; background:var(--surface-3);
+    border:1px solid var(--line-2); position:relative; cursor:pointer; transition:background 0.15s;
+  }
+  .switch::after {
+    content:''; position:absolute; top:2px; left:2px; width:21px; height:21px; border-radius:50%;
+    background:var(--ink-2); transition:transform 0.18s cubic-bezier(0.3,0.7,0,1), background 0.15s;
+  }
+  .switch.on { background:var(--pass); border-color:var(--pass); }
+  .switch.on::after { transform:translateX(19px); background:#fff; }
+  .switch.dim { opacity:0.4; pointer-events:none; }
+  .sheet .save {
+    width:100%; background:var(--accent); color:#03142b; border:none; border-radius:14px;
+    padding:14px; font-size:15px; font-weight:700; cursor:pointer;
+  }
+  .backdrop {
+    position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:55; opacity:0;
+    pointer-events:none; transition:opacity 0.24s;
+  }
+  .backdrop.on { opacity:1; pointer-events:auto; }
+
+  /* ---------- gallery ---------- */
+  .gallery {
+    position:fixed; inset:0; z-index:80; background:rgba(0,0,0,0.97); display:none;
+    flex-direction:column;
+  }
+  .gallery.on { display:flex; }
+  .gallery .g-top { display:flex; justify-content:space-between; align-items:center; padding:14px 16px; color:#fff; }
+  .gallery .g-imgs { flex:1; display:flex; overflow-x:auto; scroll-snap-type:x mandatory; }
+  .gallery .g-imgs img { min-width:100%; object-fit:contain; scroll-snap-align:center; }
+
+  /* ---------- lists (buys / history / blocked) ---------- */
+  .row {
+    display:flex; gap:12px; background:var(--surface); border:1px solid var(--line);
+    border-radius:16px; padding:11px; margin-bottom:10px;
+  }
+  .row img { width:62px; height:62px; border-radius:11px; object-fit:cover; background:var(--surface-3); flex:0 0 auto; }
+  .row .noimg { width:62px; height:62px; border-radius:11px; background:var(--surface-3); flex:0 0 auto; }
+  .row .info { flex:1; min-width:0; }
+  .row .t { font-size:14px; font-weight:640; line-height:1.3; margin-bottom:3px;
+            display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .row .m { font-size:12px; color:var(--ink-3); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .tag { font-size:10px; font-weight:800; padding:3px 7px; border-radius:6px; letter-spacing:0.04em; }
+  .tag.BUY { background:rgba(55,211,153,0.16); color:var(--buy); }
+  .tag.PASS { background:rgba(242,96,76,0.16); color:var(--pass); }
+  .tag.UNSURE { background:rgba(245,181,68,0.16); color:var(--unsure); }
+  .note { font-size:12.5px; color:var(--ink-2); margin-top:6px; font-style:italic; line-height:1.4; }
+  .filters { display:flex; gap:7px; margin-bottom:14px; flex-wrap:wrap; }
+  .empty { text-align:center; color:var(--ink-3); padding:56px 26px; font-size:14px; line-height:1.6; }
+  .empty .big { font-size:38px; margin-bottom:12px; }
+  .linkbtn { background:none; border:none; color:var(--accent); font-size:12.5px; font-weight:600; cursor:pointer; padding:0; }
+  .dangerbtn {
+    background:rgba(242,96,76,0.12); border:1px solid rgba(242,96,76,0.3); color:var(--pass);
+    border-radius:10px; padding:7px 12px; font-size:12.5px; font-weight:650; cursor:pointer;
+  }
+  .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
+  .stat {
+    background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:14px;
+  }
+  .stat .n { font-size:26px; font-weight:750; font-variant-numeric:tabular-nums; letter-spacing:-0.02em; }
+  .stat .l { font-size:11.5px; color:var(--ink-3); margin-top:2px; font-weight:600; }
+  .barrow { display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:13px; }
+  .barrow .nm { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .barrow .ct { color:var(--ink-3); font-variant-numeric:tabular-nums; font-size:12px; }
+  .toast {
+    position:fixed; left:50%; bottom:calc(84px + var(--safe-b)); transform:translateX(-50%) translateY(20px);
+    background:var(--surface-3); border:1px solid var(--line-2); color:var(--ink);
+    padding:11px 18px; border-radius:999px; font-size:13.5px; font-weight:600; z-index:90;
+    opacity:0; transition:all 0.25s; pointer-events:none; white-space:nowrap; max-width:90vw;
+  }
+  .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="viewTitle">Flick Yeah</h1>
+  <span class="pill" id="queuePill">—</span>
+  <button class="icon-btn" id="btnScan" title="Scan eBay now">⟳</button>
+  <button class="icon-btn" id="btnUndo" title="Undo last swipe">↩</button>
+</header>
+
+<main>
+  <!-- ============ SWIPE ============ -->
+  <section class="view active" id="view-swipe">
+    <div id="stage"></div>
+    <div class="actions">
+      <div class="noterow">
+        <input id="note" placeholder="Optional note — why this call? (never required)">
+      </div>
+      <div class="btnrow">
+        <button class="b-pass" id="btnPass">✕</button>
+        <button class="b-unsure" id="btnUnsure">?</button>
+        <button class="b-buy" id="btnBuy">♥</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AUCTIONS ============ -->
+  <section class="view" id="view-auctions"><div class="scroller" id="auctionsList"></div></section>
+
+  <!-- ============ BUYS ============ -->
+  <section class="view" id="view-buys"><div class="scroller" id="buysList"></div></section>
+
+  <!-- ============ HISTORY ============ -->
+  <section class="view" id="view-history">
+    <div class="scroller">
+      <div class="filters" id="histFilters">
+        <button class="chip on" data-f="">All</button>
+        <button class="chip" data-f="BUY">Kept</button>
+        <button class="chip" data-f="PASS">Passed</button>
+        <button class="chip" data-f="UNSURE">Unsure</button>
+      </div>
+      <div id="histList"></div>
+    </div>
+  </section>
+
+  <!-- ============ BLOCKED ============ -->
+  <section class="view" id="view-blocked"><div class="scroller" id="blockedList"></div></section>
+
+  <!-- ============ STATS ============ -->
+  <section class="view" id="view-setup"><div class="scroller" id="setupBody"></div></section>
+</main>
+
+<nav>
+  <button class="active" data-view="swipe"><span class="ic">🎞️</span>Swipe</button>
+  <button data-view="auctions"><span class="ic">⏳</span>Auctions</button>
+  <button data-view="buys"><span class="ic">♥</span>Kept</button>
+  <button data-view="history"><span class="ic">🕘</span>History</button>
+  <button data-view="blocked"><span class="ic">🚫</span>Blocked</button>
+  <button data-view="setup"><span class="ic">⚙️</span>Setup</button>
+</nav>
+
+<div class="backdrop" id="backdrop"></div>
+
+<!-- reject reason sheet -->
+<div class="sheet" id="sheet">
+  <div class="sheet-h">
+    <div class="t" id="sheetTitle">Why did you pass?</div>
+    <button class="icon-btn" id="sheetClose">✕</button>
+  </div>
+  <div class="chips" id="reasonChips"></div>
+  <div class="blockbox" id="blockBox">
+    <div class="switchrow">
+      <div class="lbl">
+        <span id="blockLabel">Never show this model again</span>
+        <div class="sub" id="blockSub"></div>
+      </div>
+      <div class="switch" id="swBlock"></div>
+    </div>
+    <div class="switchrow">
+      <div class="lbl">Hide it in bundles too
+        <div class="sub">Off = job lots containing it still show up</div>
+      </div>
+      <div class="switch dim" id="swEverywhere"></div>
+    </div>
+  </div>
+  <div class="noterow" style="margin-bottom:12px">
+    <input id="sheetNote" placeholder="Anything else? (optional)">
+  </div>
+  <button class="save" id="sheetSave">Save</button>
+</div>
+
+<!-- fullscreen gallery -->
+<div class="gallery" id="gallery">
+  <div class="g-top">
+    <span id="galleryCount" style="font-size:13px;color:#aaa"></span>
+    <button class="icon-btn" id="galleryClose">✕</button>
+  </div>
+  <div class="g-imgs" id="galleryImgs"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = {
+  next:  () => fetch('/api/next').then(r => r.json()),
+  decide:(id, body) => fetch(`/api/decisions/${id}/decide`, {
+           method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).then(r=>r.json()),
+  undo:  () => fetch('/api/undo', {method:'POST'}).then(r=>r.json()),
+  stats: () => fetch('/api/stats').then(r=>r.json()),
+  history:(f) => fetch('/api/history' + (f ? '?only=' + f : '')).then(r=>r.json()),
+  blocked:() => fetch('/api/blocked').then(r=>r.json()),
+  unblock:(m) => fetch('/api/blocked/' + encodeURIComponent(m), {method:'DELETE'}).then(r=>r.json()),
+  patchBlock:(m, allow) => fetch('/api/blocked/' + encodeURIComponent(m), {
+           method:'PATCH', headers:{'Content-Type':'application/json'},
+           body:JSON.stringify({allow_in_bundle: allow})}).then(r=>r.json()),
+  block: (m, reason, allow) => fetch('/api/blocked', {method:'POST', headers:{'Content-Type':'application/json'},
+           body:JSON.stringify({model:m, reason:reason, allow_in_bundle:allow})}).then(r=>r.json()),
+  scan:  () => fetch('/api/scan-now', {method:'POST'}).then(r=>r.json()),
+};
+
+let current = null, cardEl = null, lastSwipe = null;
+let sheetState = { decisionId:null, model:null, reasons:new Set(), block:false, everywhere:false };
+
+const REASONS = ["Bad model","Too expensive","Condition/damage","Opened or tampered",
+                 "Missing battery/charger","Seller looks dodgy","Not worth the effort","Better one available"];
+
+function esc(s){ const d = document.createElement('div'); d.textContent = (s == null ? '' : String(s)); return d.innerHTML; }
+function money(n){ return (n === null || n === undefined) ? '—' : '£' + Number(n).toFixed(Number(n) % 1 ? 2 : 0); }
+function pct(n){ return (n === null || n === undefined) ? '—' : Math.round(n * 100) + '%'; }
+
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+function timeLeft(iso){
+  if (!iso) return null;
+  const ms = new Date(iso) - new Date();
+  if (isNaN(ms)) return null;
+  if (ms <= 0) return 'ended';
+  const d = Math.floor(ms/86400000), h = Math.floor(ms%86400000/3600000), m = Math.floor(ms%3600000/60000);
+  if (d) return `${d}d ${h}h left`;
+  if (h) return `${h}h ${m}m left`;
+  return `${m}m left`;
+}
+
+/* ================= swipe view ================= */
+async function loadNext(){
+  let data;
+  try { data = await api.next(); } catch(e) { return; }
+  $('#queuePill').textContent = (data.remaining || 0) + ' left';
+  if (data.skipped_sold && data.skipped_sold.length) {
+    const n = data.skipped_sold.length;
+    toast(n === 1 ? 'Skipped 1 listing — already sold' : `Skipped ${n} listings — already sold`);
+  }
+  current = data.card;
+  if (!current) { renderEmpty(); return; }
+  renderCard(current);
+}
+
+function renderEmpty(){
+  if (cardEl) { cardEl.remove(); cardEl = null; }
+  $('#stage').innerHTML = `
+    <div class="empty">
+      <div class="big">🎞️</div>
+      <div>Nothing waiting right now.<br>Scanning eBay every 15 minutes in the background.</div>
+      <div style="margin-top:16px"><button class="showmore" style="width:auto;padding:10px 18px"
+        onclick="doScan()">Scan eBay now</button></div>
+    </div>`;
+  setTimeout(() => { if (!current) loadNext(); }, 20000);
+}
+
+function renderCard(c){
+  $('#stage').innerHTML = '';
+  const imgs = c.images || [];
+  const isAuction = c.listing_type === 'AUCTION';
+  const tl = timeLeft(c.end_time);
+
+  const badges = [`<span class="badge-tag ${esc(c.ai_recommendation)}">${esc(c.ai_recommendation)}</span>`];
+  if (c.is_bundle) badges.push('<span class="badge-tag info">Bundle</span>');
+  if (isAuction) badges.push(`<span class="badge-tag warn">Auction${tl ? ' · ' + esc(tl) : ''}</span>`);
+  if (c.model_blocked) badges.push('<span class="badge-tag warn">Blocked model</span>');
+
+  const desc = (c.description || '').trim() || 'No description text on this listing.';
+  const long = desc.length > 900;
+
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML = `
+    <div class="photo${imgs.length ? '' : ' empty'}" id="photo">
+      ${imgs.length ? `<img src="${esc(imgs[0])}" alt="">` : '<div class="nophoto">no photo</div>'}
+      <div class="badges">${badges.join('')}</div>
+      ${imgs.length > 1 ? `<div class="count">📷 ${imgs.length} photos — tap</div>` : ''}
+      <div class="stamp pass">PASS</div>
+      <div class="stamp buy">KEEP</div>
+      <div class="stamp unsure">?</div>
+    </div>
+    ${imgs.length > 1 ? `<div class="thumbs" id="thumbs">${
+        imgs.map((u, i) => `<img data-i="${i}" class="${i === 0 ? 'active' : ''}" src="${esc(u)}" alt="">`).join('')
+      }</div>` : ''}
+    <div class="cardbody" id="cardbody">
+      <h2 class="model">${esc(c.camera_model_guess || 'Unidentified model')}</h2>
+      <div class="fulltitle">${esc(c.title)}</div>
+
+      <div class="pricerow">
+        <span class="price">${money(c.price)}</span>
+        <span class="price-note">${isAuction
+            ? 'current bid' + (c.max_bid ? ` · max worth bidding <b style="color:var(--ink)">${money(c.max_bid)}</b>` : '')
+            : 'buy it now'}</span>
+      </div>
+
+      <div class="metrics">
+        <div class="metric"><div class="k">Exp. profit</div><div class="v" style="color:${c.ai_score > 0 ? 'var(--buy)' : 'var(--pass)'}">${money(c.ai_score)}</div></div>
+        <div class="metric"><div class="k">ROI</div><div class="v">${pct(c.ai_roi)}</div></div>
+        <div class="metric"><div class="k">Confidence</div><div class="v">${pct(c.ai_confidence)}</div></div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-h">Listing description</div>
+        <div class="desc ${long ? 'clamped' : ''}" id="descBox">${esc(desc)}</div>
+        ${long ? '<button class="showmore" id="showMore">Show full description</button>' : ''}
+      </div>
+
+      <div class="sec">
+        <div class="sec-h">Why this score</div>
+        <div class="reasoning">${esc(c.reasoning || '')}</div>
+        ${(c.bundle_signals && c.bundle_signals.length)
+            ? `<div class="metaline">Bundle signals: ${esc(c.bundle_signals.join(', '))}</div>` : ''}
+        <div class="metaline">Seller: ${esc(c.seller_username || 'unknown')}</div>
+      </div>
+
+      <a class="ebay" href="${esc(c.ebay_url || '#')}" target="_blank" rel="noopener">View on eBay ↗</a>
+    </div>`;
+
+  $('#stage').appendChild(el);
+  cardEl = el;
+
+  const sm = el.querySelector('#showMore');
+  if (sm) sm.onclick = () => { el.querySelector('#descBox').classList.remove('clamped'); sm.remove(); };
+  if (imgs.length) el.querySelector('#photo').onclick = (e) => { if (!dragMoved) openGallery(imgs); };
+
+  // thumbnail strip: tap to swap the main photo, tap the main photo for fullscreen
+  const strip = el.querySelector('#thumbs');
+  if (strip) {
+    strip.querySelectorAll('img').forEach(th => {
+      th.onclick = () => {
+        const main = el.querySelector('#photo img');
+        if (main) main.src = imgs[+th.dataset.i];
+        strip.querySelectorAll('img').forEach(x => x.classList.toggle('active', x === th));
+      };
+    });
+  }
+
+  // collapse the photo once you scroll into the text, expand again at the top
+  if (imgs.length) {
+    const photo = el.querySelector('#photo'), body = el.querySelector('#cardbody');
+    body.addEventListener('scroll', () => {
+      const reading = body.scrollTop > 40;
+      photo.classList.toggle('compact', reading);
+      if (strip) strip.classList.toggle('hidden', reading);
+    }, { passive:true });
+  }
+
+  attachDrag(el);
+}
+
+/* ---- drag: only horizontal-dominant gestures swipe, so the body still scrolls ---- */
+let dragging = false, decided = false, dragMoved = false, sx = 0, sy = 0, dx = 0, dy = 0;
+function attachDrag(el){
+  const body = el.querySelector('#cardbody');
+  el.addEventListener('pointerdown', e => {
+    if (e.target.closest('a,button')) return;
+    dragging = true; decided = false; dragMoved = false;
+    sx = e.clientX; sy = e.clientY; dx = 0; dy = 0;
+  });
+  el.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    dx = e.clientX - sx; dy = e.clientY - sy;
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) dragMoved = true;
+    // decide once whether this gesture is a swipe or a scroll
+    if (!decided && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+      decided = true;
+      const horizontal = Math.abs(dx) > Math.abs(dy) * 1.3;
+      const upFromTop = dy < 0 && Math.abs(dy) > Math.abs(dx) * 1.3 && body.scrollTop <= 0;
+      if (!horizontal && !upFromTop) { dragging = false; return; }  // let it scroll
+      el.setPointerCapture(e.pointerId);
+      el.style.transition = '';
+    }
+    if (!decided) return;
+    el.style.transform = `translate(${dx}px, ${dy < 0 ? dy : dy * 0.35}px) rotate(${dx / 18}deg)`;
+    el.querySelector('.stamp.pass').style.opacity = Math.min(1, Math.max(0, -dx / 90));
+    el.querySelector('.stamp.buy').style.opacity = Math.min(1, Math.max(0, dx / 90));
+    el.querySelector('.stamp.unsure').style.opacity = Math.min(1, Math.max(0, -dy / 90));
+  });
+  const release = () => {
+    if (!dragging) return;
+    dragging = false;
+    const TH = 95;
+    if (dx > TH) return fling('BUY', 700, 0);
+    if (dx < -TH) return fling('PASS', -700, 0);
+    if (dy < -TH) return fling('UNSURE', 0, -700);
+    el.style.transition = 'transform 0.24s cubic-bezier(0.3,0.8,0.3,1)';
+    el.style.transform = 'translate(0,0) rotate(0)';
+    ['pass','buy','unsure'].forEach(s => el.querySelector('.stamp.' + s).style.opacity = 0);
+  };
+  el.addEventListener('pointerup', release);
+  el.addEventListener('pointercancel', release);
+}
+
+function fling(decision, tx, ty){
+  if (!cardEl || !current) return;
+  const el = cardEl, card = current;
+  el.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+  el.style.transform = `translate(${tx}px, ${ty}px) rotate(${tx / 18}deg)`;
+  el.style.opacity = '0';
+  submit(decision, card);
+  current = null;
+  setTimeout(loadNext, 190);
+}
+
+async function submit(decision, card){
+  const note = $('#note').value.trim();
+  $('#note').value = '';
+  lastSwipe = { decision, card };
+  try {
+    await api.decide(card.decision_id, { decision, notes: note || null });
+  } catch(e) { toast('Save failed — check connection'); return; }
+  refreshStats();
+  if (decision === 'PASS') openSheet(card, note);
+}
+
+/* ================= reject reason sheet ================= */
+function openSheet(card, existingNote){
+  sheetState = { decisionId: card.decision_id, model: card.camera_model_guess,
+                 reasons: new Set(), block: false, everywhere: false };
+  $('#sheetTitle').textContent = 'Why did you pass?';
+  $('#reasonChips').innerHTML = REASONS.map(r =>
+    `<button class="chip" data-r="${esc(r)}">${esc(r)}</button>`).join('');
+  $('#reasonChips').querySelectorAll('.chip').forEach(ch => {
+    ch.onclick = () => {
+      const r = ch.dataset.r;
+      if (sheetState.reasons.has(r)) { sheetState.reasons.delete(r); ch.classList.remove('on'); }
+      else { sheetState.reasons.add(r); ch.classList.add('on'); }
+    };
+  });
+  $('#sheetNote').value = existingNote || '';
+
+  const hasModel = !!card.camera_model_guess;
+  $('#blockLabel').textContent = hasModel
+      ? `Never show ${card.camera_model_guess} again`
+      : 'Can’t block — model not identified';
+  $('#blockSub').textContent = hasModel
+      ? 'Hides every future listing for this model'
+      : 'The title didn’t contain a recognisable model code';
+  $('#blockBox').style.opacity = hasModel ? '1' : '0.45';
+  $('#swBlock').classList.toggle('dim', !hasModel);
+  $('#swBlock').classList.remove('on');
+  $('#swEverywhere').classList.remove('on');
+  $('#swEverywhere').classList.add('dim');
+
+  $('#sheet').classList.add('up');
+  $('#backdrop').classList.add('on');
+}
+
+function closeSheet(){ $('#sheet').classList.remove('up'); $('#backdrop').classList.remove('on'); }
+
+$('#swBlock').onclick = () => {
+  sheetState.block = !sheetState.block;
+  $('#swBlock').classList.toggle('on', sheetState.block);
+  $('#swEverywhere').classList.toggle('dim', !sheetState.block);
+  if (!sheetState.block) { sheetState.everywhere = false; $('#swEverywhere').classList.remove('on'); }
+};
+$('#swEverywhere').onclick = () => {
+  sheetState.everywhere = !sheetState.everywhere;
+  $('#swEverywhere').classList.toggle('on', sheetState.everywhere);
+};
+$('#sheetClose').onclick = closeSheet;
+$('#backdrop').onclick = closeSheet;
+$('#sheetSave').onclick = async () => {
+  const body = {
+    decision: 'PASS',
+    notes: $('#sheetNote').value.trim() || null,
+    reasons: [...sheetState.reasons],
+    block_model: sheetState.block,
+    block_everywhere: sheetState.everywhere,
+  };
+  closeSheet();
+  try {
+    const r = await api.decide(sheetState.decisionId, body);
+    if (r.blocked_model) { toast(`Blocked ${r.blocked_model}`); loadNext(); }
+    else toast('Saved');
+  } catch(e) { toast('Save failed'); }
+  refreshStats();
+};
+
+/* ================= gallery ================= */
+function openGallery(imgs){
+  $('#galleryImgs').innerHTML = imgs.map(u => `<img src="${esc(u)}" alt="">`).join('');
+  $('#galleryCount').textContent = imgs.length + ' photos — swipe';
+  $('#gallery').classList.add('on');
+}
+$('#galleryClose').onclick = () => $('#gallery').classList.remove('on');
+
+/* ================= buttons ================= */
+$('#btnPass').onclick   = () => fling('PASS', -700, 0);
+$('#btnUnsure').onclick = () => fling('UNSURE', 0, -700);
+$('#btnBuy').onclick    = () => fling('BUY', 700, 0);
+
+$('#btnUndo').onclick = async () => {
+  const r = await api.undo();
+  if (r.ok) { toast('Undone — card is back'); loadNext(); refreshStats(); }
+  else toast('Nothing to undo');
+};
+async function doScan(){
+  toast('Scanning eBay…');
+  try { const r = await api.scan(); toast(r.new ? `Found ${r.new} new listing${r.new>1?'s':''}` : 'No new listings'); }
+  catch(e) { toast('Scan failed'); }
+  loadNext(); refreshStats();
+}
+$('#btnScan').onclick = doScan;
+
+document.addEventListener('keydown', e => {
+  if (document.activeElement.tagName === 'INPUT') return;
+  if (currentView !== 'swipe') return;
+  if (e.key === 'ArrowLeft')  fling('PASS', -700, 0);
+  if (e.key === 'ArrowRight') fling('BUY', 700, 0);
+  if (e.key === 'ArrowUp')    fling('UNSURE', 0, -700);
+  if (e.key === 'u')          $('#btnUndo').click();
+});
+
+/* ================= lists ================= */
+function rowHtml(it, extra){
+  const img = it.image_url ? `<img src="${esc(it.image_url)}" alt="">` : '<div class="noimg"></div>';
+  const reasons = (it.reject_reasons || []).length
+      ? `<div class="m" style="margin-top:5px">${it.reject_reasons.map(r => `<span class="tag PASS">${esc(r)}</span>`).join('')}</div>` : '';
+  return `<div class="row">
+    ${img}
+    <div class="info">
+      <div class="t">${esc(it.camera_model_guess || it.title)}</div>
+      <div class="m">
+        <span class="tag ${esc(it.your_decision)}">${esc(it.your_decision)}</span>
+        <span>${money(it.price)}</span>
+        ${it.listing_type === 'AUCTION'
+            ? `<span class="tag UNSURE">AUCTION${timeLeft(it.end_time) ? ' · ' + esc(timeLeft(it.end_time)) : ''}</span>`
+            : '<span class="tag" style="background:rgba(255,255,255,0.08);color:var(--ink-3)">BUY IT NOW</span>'}
+        ${it.is_bundle ? '<span>· bundle</span>' : ''}
+        <a href="${esc(it.ebay_url || '#')}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">eBay ↗</a>
+      </div>
+      ${reasons}
+      ${it.your_notes ? `<div class="note">“${esc(it.your_notes)}”</div>` : ''}
+      ${extra || ''}
+    </div>
+  </div>`;
+}
+
+async function loadBuys(){
+  const { items } = await api.history('BUY');
+  $('#buysList').innerHTML = items.length
+    ? `<div style="font-size:12.5px;color:var(--ink-3);margin-bottom:12px">
+         ${items.length} listing${items.length>1?'s':''} you kept — go bid or buy these on eBay.</div>`
+      + items.map(it => rowHtml(it)).join('')
+    : `<div class="empty"><div class="big">♥</div>Nothing kept yet.<br>Swipe right on something you want.</div>`;
+}
+
+function auctionRow(it, kept){
+  const left = timeLeft(it.end_time) || '';
+  const urgent = left.includes('m left') && !left.includes('h');
+  const soon = left.includes('h ') && !left.includes('d');
+  const col = urgent ? 'var(--pass)' : (soon ? 'var(--unsure)' : 'var(--ink-2)');
+  return `<div class="row">
+    ${it.image_url ? `<img src="${esc(it.image_url)}" alt="">` : '<div class="noimg"></div>'}
+    <div class="info">
+      <div class="t">${esc(it.camera_model_guess || it.title)}</div>
+      <div class="m" style="margin-bottom:5px">
+        <span style="color:${col};font-weight:700">⏳ ${esc(left)}</span>
+        ${it.is_bundle ? '<span class="tag UNSURE">bundle</span>' : ''}
+      </div>
+      <div class="m">
+        <span>bid <b style="color:var(--ink)">${money(it.current_bid != null ? it.current_bid : it.price)}</b></span>
+        ${it.max_bid != null
+            ? `<span>· don't go above <b style="color:var(--buy)">${money(it.max_bid)}</b></span>`
+            : '<span>· no resale data for this model</span>'}
+      </div>
+      ${!kept ? `<div class="m" style="margin-top:4px"><span class="tag ${esc(it.ai_recommendation)}">${esc(it.ai_recommendation)}</span>
+                 <span>exp. ${money(it.ai_score)}</span></div>` : ''}
+      ${it.your_notes ? `<div class="note">“${esc(it.your_notes)}”</div>` : ''}
+      <div class="m" style="margin-top:7px">
+        <a href="${esc(it.ebay_url || '#')}" target="_blank" rel="noopener"
+           style="color:var(--accent);text-decoration:none;font-weight:600">Go bid on eBay ↗</a>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function loadAuctions(){
+  const d = await fetch('/api/auctions').then(r => r.json());
+  let html = '';
+  html += `<div class="sec-h" style="margin-bottom:10px">Your wishlist — ending soonest first</div>`;
+  html += d.wishlist.length
+    ? d.wishlist.map(it => auctionRow(it, true)).join('')
+    : `<div style="color:var(--ink-3);font-size:13.5px;line-height:1.6;padding:4px 0 18px">
+         No auctions on your wishlist yet. Anything you swipe right on that's an
+         auction lands here with a countdown, so you don't miss the end.</div>`;
+
+  if (d.ending_soon.length) {
+    html += `<div class="sec-h" style="margin:24px 0 10px">Ending within 2 days — not swiped yet</div>`;
+    html += d.ending_soon.map(it => auctionRow(it, false)).join('');
+  }
+  $('#auctionsList').innerHTML = html;
+}
+
+let histFilter = '';
+async function loadHistory(){
+  const { items } = await api.history(histFilter);
+  $('#histList').innerHTML = items.length
+    ? items.map(it => rowHtml(it)).join('')
+    : `<div class="empty"><div class="big">🕘</div>No decisions logged yet.</div>`;
+}
+$('#histFilters').querySelectorAll('.chip').forEach(ch => {
+  ch.onclick = () => {
+    $('#histFilters').querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
+    ch.classList.add('on'); histFilter = ch.dataset.f; loadHistory();
+  };
+});
+
+async function loadBlocked(){
+  const [{ items }, st] = await Promise.all([api.blocked(), api.stats()]);
+  let html = '';
+  if (items.length) {
+    html += `<div style="font-size:12.5px;color:var(--ink-3);margin-bottom:12px">
+      Listings for these never reach your swipe queue.</div>`;
+    html += items.map(b => `
+      <div class="row" style="align-items:flex-start">
+        <div class="info">
+          <div class="t">${esc(b.model)}</div>
+          <div class="m">
+            <span>${b.hidden_count} hidden now</span>
+            ${b.reason ? `<span>· ${esc(b.reason)}</span>` : ''}
+          </div>
+          <div class="m" style="margin-top:9px;gap:10px">
+            <button class="linkbtn" data-toggle="${esc(b.model)}" data-allow="${b.allow_in_bundle}">
+              ${b.allow_in_bundle ? '✓ Still shown in bundles' : '✗ Hidden everywhere'}
+            </button>
+          </div>
+        </div>
+        <button class="dangerbtn" data-unblock="${esc(b.model)}">Unblock</button>
+      </div>`).join('');
+  } else {
+    html += `<div class="empty"><div class="big">🚫</div>No blocked models.<br>
+      Pass on something and tick “never show this model again”.</div>`;
+  }
+
+  const suggestions = (st.top_passed_models || []).filter(m => m.n >= 2 && !items.some(b => b.model === m.model));
+  if (suggestions.length) {
+    html += `<div class="sec-h" style="margin:22px 0 10px">Passed on repeatedly — block?</div>`;
+    html += suggestions.map(s => `
+      <div class="row">
+        <div class="info">
+          <div class="t">${esc(s.model)}</div>
+          <div class="m">You've passed on this ${s.n} times</div>
+        </div>
+        <button class="dangerbtn" data-block="${esc(s.model)}">Block</button>
+      </div>`).join('');
+  }
+  $('#blockedList').innerHTML = html;
+
+  $('#blockedList').querySelectorAll('[data-unblock]').forEach(b => b.onclick = async () => {
+    await api.unblock(b.dataset.unblock); toast('Unblocked — its listings are back'); loadBlocked(); loadNext();
+  });
+  $('#blockedList').querySelectorAll('[data-block]').forEach(b => b.onclick = async () => {
+    await api.block(b.dataset.block, 'blocked from stats', true); toast('Blocked'); loadBlocked(); loadNext();
+  });
+  $('#blockedList').querySelectorAll('[data-toggle]').forEach(b => b.onclick = async () => {
+    await api.patchBlock(b.dataset.toggle, b.dataset.allow !== '1'); loadBlocked(); loadNext();
+  });
+}
+
+
+/* ================= setup / settings ================= */
+function settingField(def, value){
+  const id = 'set_' + def.key;
+  if (def.type === 'bool') {
+    const on = value === '1' || value === 'true';
+    return `<div class="switchrow" style="background:var(--surface);border:1px solid var(--line);
+                 border-radius:14px;padding:13px;margin-bottom:10px">
+      <div class="lbl">${esc(def.label)}<div class="sub">${esc(def.help)}</div></div>
+      <div class="switch ${on ? 'on' : ''}" data-toggle-setting="${esc(def.key)}"
+           data-value="${on ? '1' : '0'}"></div>
+    </div>`;
+  }
+  const input = def.type === 'lines'
+    ? `<textarea id="${id}" data-setting="${esc(def.key)}" rows="7"
+         style="width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;
+                color:var(--ink);padding:11px 12px;font-size:14px;font-family:inherit;resize:vertical;
+                line-height:1.5">${esc(value)}</textarea>`
+    : `<input id="${id}" data-setting="${esc(def.key)}" type="number" step="any" value="${esc(value)}"
+         style="width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;
+                color:var(--ink);padding:11px 12px;font-size:15px;font-family:inherit">`;
+  return `<div style="margin-bottom:14px">
+      <div style="font-size:13.5px;font-weight:650;margin-bottom:3px">${esc(def.label)}</div>
+      <div style="font-size:11.5px;color:var(--ink-3);margin-bottom:7px;line-height:1.45">${esc(def.help)}</div>
+      ${input}
+    </div>`;
+}
+
+async function loadSetup(){
+  const [cfg, s] = await Promise.all([
+    fetch('/api/settings').then(r => r.json()),
+    api.stats(),
+  ]);
+
+  const usedPct = Math.min(100, Math.round(s.api_calls_today / s.api_budget * 100));
+  const bar = rows => rows.length
+    ? rows.map(r => `<div class="barrow"><span class="nm">${esc(r.model)}</span><span class="ct">${r.n}</span></div>`).join('')
+    : '<div style="color:var(--ink-3);font-size:13px">Nothing yet.</div>';
+
+  $('#setupBody').innerHTML = `
+    <div class="sec">
+      <div class="sec-h">Why isn't a listing showing up?</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input id="lookupQ" placeholder="e.g. DSC-W120"
+          style="flex:1;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;
+                 color:var(--ink);padding:11px 12px;font-size:14px;font-family:inherit;min-width:0">
+        <button class="showmore" id="lookupGo" style="width:auto;padding:0 18px">Check</button>
+      </div>
+      <div id="lookupOut" style="font-size:13px;color:var(--ink-3);line-height:1.55">
+        Type a model or keyword to see whether it was ever scanned, and if so, exactly
+        why it is or isn't in your swipe queue.
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Search settings</div>
+      <div id="settingsForm">${cfg.defs.map(d => settingField(d, cfg.values[d.key])).join('')}</div>
+      <button class="save" id="saveSettings"
+        style="width:100%;background:var(--accent);color:#03142b;border:none;border-radius:14px;
+               padding:14px;font-size:15px;font-weight:700;cursor:pointer">Save settings</button>
+      <div style="font-size:11.5px;color:var(--ink-3);margin-top:8px;line-height:1.5">
+        Saved instantly to the database — no restart, no redeploy. The scanner picks up
+        changes on its next run; tap the ⟳ button up top to apply them right now.
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Resale values per model</div>
+      <div style="font-size:11.5px;color:var(--ink-3);margin-bottom:10px;line-height:1.5">
+        What you reckon each model sells for on Vinted. Models with no figures are judged
+        against the single "assumed resale" number above — which is usually why an
+        unfamiliar model gets scored PASS. Fill these in and the scoring gets far sharper.
+      </div>
+      <div id="camList"></div>
+      <button class="showmore" id="btnRescore" style="margin-top:4px">Re-score my queue with these values</button>
+      <div style="font-size:11.5px;color:var(--ink-3);margin-top:7px;line-height:1.5">
+        Scores are worked out when a listing is first found, so changing values here only
+        affects what's already in your queue once you tap this.
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">eBay API usage today</div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+          <span style="font-size:20px;font-weight:700;font-variant-numeric:tabular-nums">
+            ${s.api_calls_today} <span style="font-size:13px;color:var(--ink-3);font-weight:600">/ ${s.api_budget}</span>
+          </span>
+          <span style="font-size:11.5px;color:var(--ink-3)">resets midnight UTC</span>
+        </div>
+        <div style="height:7px;background:var(--surface-3);border-radius:999px;overflow:hidden">
+          <div style="height:100%;width:${usedPct}%;background:${usedPct > 85 ? 'var(--pass)' : 'var(--buy)'}"></div>
+        </div>
+        <div style="font-size:11.5px;color:var(--ink-3);margin-top:8px;line-height:1.5">
+          eBay's hard limit is ${s.api_hard_limit}/day. Scanning stops itself at your budget
+          so you're never cut off mid-day. Currently scanning every ${s.scan_every_minutes} min.
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat"><div class="n">${s.pending_visible}</div><div class="l">Waiting to swipe</div></div>
+      <div class="stat"><div class="n">${s.buys_total}</div><div class="l">Kept all time</div></div>
+      <div class="stat"><div class="n">${s.passes_total}</div><div class="l">Passed all time</div></div>
+      <div class="stat"><div class="n">${s.decisions_total}</div><div class="l">Listings scanned</div></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">You vs the scoring formula</div>
+      <div style="font-size:14px;line-height:1.6;color:var(--ink-2)">
+        ${s.agreement_rate === null
+          ? 'Not enough decisions yet to compare.'
+          : `You agree with the algorithm <b style="color:var(--ink)">${pct(s.agreement_rate)}</b> of the time.
+             ${s.agreement_rate < 0.6 ? 'That gap is worth a look — the scoring rules may need tuning.' : 'Reasonably in step.'}`}
+      </div>
+    </div>
+
+    <div class="sec"><div class="sec-h">Most passed models</div>${bar(s.top_passed_models)}</div>
+    <div class="sec"><div class="sec-h">Most kept models</div>${bar(s.top_bought_models)}</div>
+
+    <div class="sec">
+      <div class="sec-h">Maintenance</div>
+      <button class="showmore" id="btnRefreshDetails">Re-fetch photos &amp; descriptions</button>
+      <div style="font-size:11.5px;color:var(--ink-3);margin-top:7px;line-height:1.5">
+        Pulls the full photo set and a clean description for everything still waiting
+        in your queue. Worth running once after an update.
+      </div>
+    </div>
+    <div style="color:var(--ink-3);font-size:12px;text-align:center;padding:10px 0 4px">
+      Phase 1 — rule-based scoring, no LLM
+    </div>`;
+
+  // toggles
+  $('#setupBody').querySelectorAll('[data-toggle-setting]').forEach(sw => {
+    sw.onclick = () => {
+      const on = sw.dataset.value !== '1';
+      sw.dataset.value = on ? '1' : '0';
+      sw.classList.toggle('on', on);
+    };
+  });
+
+  $('#saveSettings').onclick = async () => {
+    const values = {};
+    $('#setupBody').querySelectorAll('[data-setting]').forEach(el => values[el.dataset.setting] = el.value);
+    $('#setupBody').querySelectorAll('[data-toggle-setting]').forEach(el =>
+      values[el.dataset.toggleSetting] = el.dataset.value);
+    try {
+      await fetch('/api/settings', {method:'POST', headers:{'Content-Type':'application/json'},
+                                    body: JSON.stringify({values})});
+      toast('Settings saved');
+      loadNext(); refreshStats();
+    } catch(e) { toast('Save failed'); }
+  };
+
+  loadCameras();
+
+  $('#btnRescore').onclick = async (e) => {
+    e.target.textContent = 'Re-scoring…'; e.target.disabled = true;
+    try {
+      const r = await fetch('/api/rescore', {method:'POST'}).then(x => x.json());
+      toast(`Re-scored ${r.rescored} listings`);
+    } catch(err) { toast('Re-score failed'); }
+    e.target.textContent = 'Re-score my queue with these values'; e.target.disabled = false;
+    loadNext(); refreshStats();
+  };
+
+  $('#lookupGo').onclick = doLookup;
+  $('#lookupQ').addEventListener('keydown', e => { if (e.key === 'Enter') doLookup(); });
+
+  $('#btnRefreshDetails').onclick = async (e) => {
+    const btn = e.target;
+    btn.textContent = 'Fetching…'; btn.disabled = true;
+    try {
+      const r = await fetch('/api/refresh-details', {method:'POST'}).then(x => x.json());
+      toast(`Updated ${r.updated} of ${r.checked}`);
+    } catch(err) { toast('Refresh failed'); }
+    btn.textContent = 'Re-fetch photos & descriptions'; btn.disabled = false;
+    loadNext();
+  };
+}
+
+async function loadCameras(){
+  const d = await fetch('/api/cameras').then(r => r.json());
+  const box = $('#camList');
+  if (!box) return;
+  if (!d.items.length) {
+    box.innerHTML = `<div style="color:var(--ink-3);font-size:13px;padding-bottom:8px">
+      No models seen yet — run a scan first.</div>`;
+    return;
+  }
+  box.innerHTML = d.items.map(c => {
+    const known = c.resale_low != null && c.resale_high != null && (c.resale_low || c.resale_high);
+    return `<div style="background:var(--surface);border:1px solid ${known ? 'var(--line)' : 'rgba(245,181,68,0.35)'};
+                border-radius:13px;padding:11px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px">
+        <span style="font-size:13.5px;font-weight:640;line-height:1.3">${esc(c.model)}</span>
+        <span style="font-size:11px;color:var(--ink-3);white-space:nowrap">${c.listings} seen</span>
+      </div>
+      ${known ? '' : `<div style="font-size:11px;color:var(--unsure);margin-bottom:7px">
+          No resale data — scored against £${d.default_resale}</div>`}
+      <div style="display:flex;gap:7px;align-items:center">
+        <input type="number" step="any" placeholder="low" value="${c.resale_low != null ? c.resale_low : ''}"
+          data-cam="${esc(c.model)}" data-field="low"
+          style="flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--line);
+                 border-radius:9px;color:var(--ink);padding:8px 10px;font-size:14px">
+        <span style="color:var(--ink-3);font-size:13px">to</span>
+        <input type="number" step="any" placeholder="high" value="${c.resale_high != null ? c.resale_high : ''}"
+          data-cam="${esc(c.model)}" data-field="high"
+          style="flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--line);
+                 border-radius:9px;color:var(--ink);padding:8px 10px;font-size:14px">
+        <button class="linkbtn" data-savecam="${esc(c.model)}"
+          style="padding:8px 10px;font-weight:650">Save</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  box.querySelectorAll('[data-savecam]').forEach(btn => {
+    btn.onclick = async () => {
+      const model = btn.dataset.savecam;
+      const lo = box.querySelector(`[data-cam="${CSS.escape(model)}"][data-field="low"]`).value;
+      const hi = box.querySelector(`[data-cam="${CSS.escape(model)}"][data-field="high"]`).value;
+      if (lo === '' || hi === '') { toast('Fill in both numbers'); return; }
+      await fetch('/api/cameras', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({model, resale_low: Number(lo), resale_high: Number(hi)})});
+      toast(`Saved ${model}`);
+      loadCameras();
+    };
+  });
+}
+
+async function doLookup(){
+  const q = $('#lookupQ').value.trim();
+  if (!q) return;
+  $('#lookupOut').innerHTML = 'Checking…';
+  const r = await fetch('/api/lookup?q=' + encodeURIComponent(q)).then(x => x.json());
+  if (!r.items.length) {
+    $('#lookupOut').innerHTML = `<div style="background:var(--surface);border:1px solid var(--line);
+      border-radius:12px;padding:12px;color:var(--ink-2);line-height:1.6">
+      <b style="color:var(--ink)">No match — never scanned.</b><br>${esc(r.note || '')}
+      <br><br>Fix: add a search phrase that would match it, or widen the price range above.</div>`;
+    return;
+  }
+  $('#lookupOut').innerHTML = r.items.map(it => `
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;
+                padding:11px;margin-bottom:8px">
+      <div style="font-size:13.5px;font-weight:640;color:var(--ink);line-height:1.35;margin-bottom:4px">
+        ${esc(it.title)}</div>
+      <div class="m" style="margin-bottom:6px">
+        <span>${money(it.price)}</span>
+        <span class="tag ${esc(it.ai_recommendation)}">${esc(it.ai_recommendation)}</span>
+        <span>exp. ${money(it.ai_score)}</span>
+        ${it.ebay_url ? `<a href="${esc(it.ebay_url)}" target="_blank" rel="noopener"
+             style="color:var(--accent);text-decoration:none">eBay ↗</a>` : ''}
+      </div>
+      ${it.in_queue
+        ? '<div style="color:var(--buy);font-size:12.5px;font-weight:650">✓ In your queue now</div>'
+        : `<div style="color:var(--unsure);font-size:12.5px;line-height:1.5">
+             Hidden because: ${esc(it.hidden_because.join('; '))}</div>`}
+    </div>`).join('');
+}
+
+/* ================= navigation ================= */
+let currentView = 'swipe';
+const TITLES = { swipe:'Flick Yeah', auctions:'Auctions', buys:'Kept', history:'History',
+                 blocked:'Blocked models', setup:'Settings' };
+document.querySelectorAll('nav button').forEach(b => {
+  b.onclick = () => {
+    currentView = b.dataset.view;
+    document.querySelectorAll('nav button').forEach(x => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + currentView));
+    $('#viewTitle').textContent = TITLES[currentView];
+    if (currentView === 'auctions') loadAuctions();
+    if (currentView === 'buys') loadBuys();
+    if (currentView === 'history') loadHistory();
+    if (currentView === 'blocked') loadBlocked();
+    if (currentView === 'setup') loadSetup();
+    if (currentView === 'swipe') loadNext();
+  };
+});
+
+async function refreshStats(){
+  try {
+    const s = await api.stats();
+    $('#queuePill').textContent = s.pending_visible + ' left';
+  } catch(e) {}
+}
+
+loadNext();
+refreshStats();
+setInterval(() => { if (currentView === 'swipe' && !current) loadNext(); }, 30000);
+</script>
+</body>
+</html>

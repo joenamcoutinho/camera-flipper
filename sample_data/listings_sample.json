@@ -1,0 +1,46 @@
+[
+  {
+    "ebay_item_id": "demo-001",
+    "title": "Sony Cybershot DSC-W1 Digital Camera - Untested No Battery",
+    "description": "Selling my old Sony Cybershot DSC-W1. Untested as I don't have a battery or charger for it. It was working the last time I used it a few years ago, just been stored in a drawer since. Comes as seen, no returns.",
+    "price": 22.00,
+    "listing_type": "FIXED_PRICE",
+    "current_bid": null,
+    "end_time": null,
+    "seller_username": "clearing_the_loft_22",
+    "image_urls": []
+  },
+  {
+    "ebay_item_id": "demo-002",
+    "title": "Sony Cybershot DSC-W1 For Parts - Doesn't Turn On",
+    "description": "Sony DSC-W1 for parts or repair only. Dropped it a while back, screen is cracked and it doesn't turn on. I did open it up to see if the battery had leaked but couldn't fix it myself. Selling as spares/repair.",
+    "price": 8.00,
+    "listing_type": "FIXED_PRICE",
+    "current_bid": null,
+    "end_time": null,
+    "seller_username": "electronics_junkyard",
+    "image_urls": []
+  },
+  {
+    "ebay_item_id": "demo-003",
+    "title": "Sony Cybershot DSC-W1 - Fully Working Order",
+    "description": "Sony Cybershot DSC-W1 in full working order, turns on, screen works, takes photos fine. Comes with a battery and charger. Sold as tested and working.",
+    "price": 42.00,
+    "listing_type": "AUCTION",
+    "current_bid": 42.00,
+    "end_time": "2026-09-10T20:00:00Z",
+    "seller_username": "camera_collector_uk",
+    "image_urls": []
+  },
+  {
+    "ebay_item_id": "demo-004",
+    "title": "Sony DSC-W1 job lot bundle untested cameras",
+    "description": "Job lot of old digital cameras cleared from a house, includes this Sony DSC-W1 among others. All sold as untested, no chargers included with any of them, can't test any of them. No returns accepted.",
+    "price": 18.00,
+    "listing_type": "FIXED_PRICE",
+    "current_bid": null,
+    "end_time": null,
+    "seller_username": "bulk_electronics_liquidator",
+    "image_urls": []
+  }
+]
