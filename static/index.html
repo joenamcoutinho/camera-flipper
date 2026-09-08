@@ -20,7 +20,32 @@
     --unsure:#f5b544;
     --pass:#f2604c;
     --accent:#5b9dff;
-    --radius:20px;
+
+    /* radius scale — small, consistent set instead of ad hoc px values */
+    --radius-xs:8px;
+    --radius-sm:11px;
+    --radius-md:14px;
+    --radius-lg:18px;
+    --radius-xl:22px;
+    --radius-pill:999px;
+    --radius:var(--radius-lg); /* legacy alias, still used by .card */
+
+    /* spacing scale — 4/8/12/16/20/24 */
+    --sp-1:4px;
+    --sp-2:8px;
+    --sp-3:12px;
+    --sp-4:16px;
+    --sp-5:20px;
+    --sp-6:24px;
+
+    /* elevation — soft, low-opacity layered shadows for dark surfaces */
+    --shadow-1:0 1px 2px rgba(0,0,0,0.3), 0 3px 10px rgba(0,0,0,0.22);
+    --shadow-2:0 10px 28px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-3:0 -14px 36px rgba(0,0,0,0.45);
+
+    --header-bg:rgba(11,13,18,0.78);
+
+    --ease-out:cubic-bezier(0.22,1,0.36,1);
     --safe-b:env(safe-area-inset-bottom, 0px);
   }
   html.light-theme {
@@ -31,72 +56,92 @@
     --ink:#1a1d23;
     --ink-2:#4b5563;
     --ink-3:#7b8491;
-    --line:rgba(0,0,0,0.06);
-    --line-2:rgba(0,0,0,0.12);
-    --buy:#37d399;
-    --unsure:#f5b544;
-    --pass:#f2604c;
-    --accent:#5b9dff;
+    --line:rgba(0,0,0,0.07);
+    --line-2:rgba(0,0,0,0.13);
+    --buy:#2fb587;
+    --unsure:#e0992e;
+    --pass:#e0503c;
+    --accent:#3b82f6;
+
+    --shadow-1:0 1px 2px rgba(15,23,42,0.05), 0 2px 8px rgba(15,23,42,0.06);
+    --shadow-2:0 8px 24px rgba(15,23,42,0.10), 0 2px 6px rgba(15,23,42,0.06);
+    --shadow-3:0 -10px 30px rgba(15,23,42,0.14);
+
+    --header-bg:rgba(248,249,250,0.78);
   }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body {
     margin:0; padding:0; height:100%; background:var(--bg); color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
-    font-size:16px; overscroll-behavior:none;
+    font-size:16px; line-height:1.4; overscroll-behavior:none;
+    -webkit-font-smoothing:antialiased;
   }
   body { display:flex; flex-direction:column; height:100dvh; }
   button { font-family:inherit; }
+  input, textarea { font-family:inherit; }
 
   /* ---------- header ---------- */
   header {
-    flex:0 0 auto; display:flex; align-items:center; gap:10px;
-    padding:12px 16px 10px; border-bottom:1px solid var(--line);
-    background:var(--bg);
+    flex:0 0 auto; display:flex; align-items:center; gap:var(--sp-3);
+    padding:var(--sp-3) var(--sp-4) var(--sp-2);
+    border-bottom:1px solid var(--line);
+    background:var(--header-bg);
+    -webkit-backdrop-filter:blur(20px) saturate(1.6);
+    backdrop-filter:blur(20px) saturate(1.6);
+    position:relative; z-index:10;
   }
-  header h1 { font-size:16px; font-weight:650; margin:0; letter-spacing:-0.01em; flex:1; }
+  header h1 { font-size:17px; font-weight:680; margin:0; letter-spacing:-0.012em; flex:1; }
   .pill {
     font-size:12px; font-weight:600; color:var(--ink-2); background:var(--surface-2);
-    border:1px solid var(--line); border-radius:999px; padding:5px 11px;
+    border:1px solid var(--line); border-radius:var(--radius-pill); padding:5px 11px;
     font-variant-numeric:tabular-nums; white-space:nowrap;
+    transition:background 0.18s var(--ease-out), color 0.18s var(--ease-out);
   }
   .icon-btn {
     background:var(--surface-2); border:1px solid var(--line); color:var(--ink-2);
-    border-radius:12px; width:36px; height:34px; font-size:15px; cursor:pointer;
+    border-radius:var(--radius-sm); width:36px; height:34px; font-size:15px; cursor:pointer;
     display:grid; place-items:center; padding:0;
+    transition:background 0.15s var(--ease-out), transform 0.12s var(--ease-out), opacity 0.15s var(--ease-out);
   }
-  .icon-btn:active { background:var(--surface-3); }
+  .icon-btn:active { background:var(--surface-3); transform:scale(0.92); }
   .icon-btn[disabled] { opacity:0.35; }
 
   /* ---------- layout ---------- */
   main { flex:1 1 auto; position:relative; overflow:hidden; }
   .view { position:absolute; inset:0; display:none; flex-direction:column; }
   .view.active { display:flex; }
-  .scroller { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 16px 24px; }
+  .scroller { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:var(--sp-4) var(--sp-4) var(--sp-6); }
 
   /* ---------- bottom nav ---------- */
   nav {
     flex:0 0 auto; display:flex; border-top:1px solid var(--line);
-    background:var(--bg); padding-bottom:var(--safe-b);
+    background:var(--header-bg); padding-bottom:var(--safe-b);
+    -webkit-backdrop-filter:blur(20px) saturate(1.6);
+    backdrop-filter:blur(20px) saturate(1.6);
+    position:relative; z-index:10;
   }
   nav button {
     flex:1; background:none; border:none; color:var(--ink-3); padding:9px 2px 8px;
     font-size:10px; font-weight:600; letter-spacing:0.02em; cursor:pointer;
     display:flex; flex-direction:column; align-items:center; gap:3px;
+    transition:color 0.18s var(--ease-out), transform 0.12s var(--ease-out);
   }
-  nav button .ic { font-size:17px; line-height:1; }
+  nav button:active { transform:scale(0.93); }
+  nav button .ic { font-size:17px; line-height:1; transition:transform 0.18s var(--ease-out); }
   nav button.active { color:var(--ink); }
+  nav button.active .ic { transform:translateY(-1px); }
   nav button .badge {
     position:absolute; transform:translate(14px,-4px); background:var(--accent);
-    color:#04101f; font-size:9px; font-weight:800; border-radius:999px;
+    color:#04101f; font-size:9px; font-weight:800; border-radius:var(--radius-pill);
     padding:1px 5px; min-width:16px;
   }
 
   /* ---------- swipe card ---------- */
-  #stage { flex:1; position:relative; padding:12px 14px 0; min-height:0; }
+  #stage { flex:1; position:relative; padding:var(--sp-3) var(--sp-4) 0; min-height:0; }
   .card {
     position:absolute; inset:12px 14px 0; background:var(--surface);
     border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
-    display:flex; flex-direction:column; box-shadow:0 18px 40px rgba(0,0,0,0.45);
+    display:flex; flex-direction:column; box-shadow:var(--shadow-2);
     touch-action:pan-y; will-change:transform;
   }
   /* Photo shrinks out of the way once you start reading, so a long
@@ -120,7 +165,8 @@
   .badges { position:absolute; top:12px; left:12px; right:12px; display:flex; gap:6px; flex-wrap:wrap; z-index:2; }
   .badge-tag {
     font-size:10.5px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase;
-    padding:5px 9px; border-radius:8px; backdrop-filter:blur(8px);
+    padding:5px 9px; border-radius:var(--radius-xs); backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
   }
   .badge-tag.BUY { background:rgba(55,211,153,0.92); color:#04170f; }
   .badge-tag.UNSURE { background:rgba(245,181,68,0.92); color:#1d1400; }
@@ -155,57 +201,65 @@
   }
   .thumbs img.active { opacity:1; border-color:var(--accent); }
 
-  .cardbody { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 16px 20px; }
-  .model { font-size:19px; font-weight:700; margin:0 0 2px; letter-spacing:-0.015em; line-height:1.25; }
-  .fulltitle { font-size:12.5px; color:var(--ink-3); line-height:1.45; margin-bottom:12px; }
-  .pricerow { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
-  .price { font-size:26px; font-weight:750; font-variant-numeric:tabular-nums; letter-spacing:-0.02em; }
+  .cardbody { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:var(--sp-4) var(--sp-4) var(--sp-5); }
+  .model { font-size:20px; font-weight:700; margin:0 0 2px; letter-spacing:-0.018em; line-height:1.25; }
+  .fulltitle { font-size:12.5px; color:var(--ink-3); line-height:1.5; margin-bottom:var(--sp-3); }
+  .pricerow { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:var(--sp-3); }
+  .price { font-size:27px; font-weight:750; font-variant-numeric:tabular-nums; letter-spacing:-0.02em; }
   .price-note { font-size:12.5px; color:var(--ink-2); }
-  .metrics { display:flex; gap:7px; margin-bottom:16px; }
-  .metric { flex:1; background:var(--surface-2); border:1px solid var(--line); border-radius:13px; padding:9px 10px; }
+  .metrics { display:flex; gap:var(--sp-2); margin-bottom:var(--sp-4); }
+  .metric {
+    flex:1; background:var(--surface-2); border:1px solid var(--line);
+    border-radius:var(--radius-md); padding:10px 11px; transition:background 0.15s var(--ease-out);
+  }
   .metric .k { font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-3); font-weight:700; margin-bottom:3px; }
   .metric .v { font-size:16px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-0.01em; }
-  .sec { margin-bottom:16px; }
+  .sec { margin-bottom:var(--sp-4); }
   .sec-h {
-    font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-3);
-    font-weight:700; margin-bottom:7px; display:flex; align-items:center; gap:7px;
+    font-size:10.5px; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-3);
+    font-weight:700; margin-bottom:var(--sp-2); display:flex; align-items:center; gap:7px;
   }
   .sec-h::after { content:''; flex:1; height:1px; background:var(--line); }
   /* the description: full width, readable size, real line spacing.
      no more squinting at a tiny scroll box. */
   .desc {
-    font-size:15px; line-height:1.65; color:#dfe3ea; white-space:pre-wrap;
+    font-size:15px; line-height:1.65; color:var(--ink); white-space:pre-wrap;
     word-break:break-word;
   }
   .desc.clamped { max-height:340px; overflow:hidden; mask-image:linear-gradient(to bottom,#000 72%,transparent); }
   .showmore {
-    margin-top:8px; background:var(--surface-2); border:1px solid var(--line-2); color:var(--ink);
-    border-radius:10px; padding:9px 14px; font-size:13px; font-weight:600; width:100%; cursor:pointer;
+    margin-top:var(--sp-2); background:var(--surface-2); border:1px solid var(--line-2); color:var(--ink);
+    border-radius:var(--radius-sm); padding:10px 14px; font-size:13px; font-weight:600; width:100%; cursor:pointer;
+    transition:background 0.15s var(--ease-out), transform 0.1s var(--ease-out);
   }
+  .showmore:active { background:var(--surface-3); transform:scale(0.98); }
   .reasoning { font-size:13.5px; line-height:1.6; color:var(--ink-2); white-space:pre-wrap; }
   .metaline { font-size:12px; color:var(--ink-3); margin-top:4px; }
   a.ebay {
     display:inline-flex; align-items:center; gap:6px; margin-top:6px; font-size:13.5px;
     font-weight:600; color:var(--accent); text-decoration:none;
     background:rgba(91,157,255,0.1); border:1px solid rgba(91,157,255,0.25);
-    padding:9px 14px; border-radius:11px;
+    padding:10px 14px; border-radius:var(--radius-sm); transition:background 0.15s var(--ease-out), transform 0.1s var(--ease-out);
   }
+  a.ebay:active { transform:scale(0.98); }
 
   /* ---------- action bar ---------- */
-  .actions { flex:0 0 auto; padding:10px 14px calc(10px + var(--safe-b)); }
-  .noterow { display:flex; gap:8px; margin-bottom:9px; }
+  .actions { flex:0 0 auto; padding:var(--sp-2) var(--sp-4) calc(var(--sp-2) + var(--safe-b)); }
+  .noterow { display:flex; gap:8px; margin-bottom:var(--sp-2); }
   .noterow input {
-    flex:1; background:var(--surface); border:1px solid var(--line); border-radius:13px;
+    flex:1; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-md);
     color:var(--ink); padding:11px 13px; font-size:14px; font-family:inherit; min-width:0;
+    transition:border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
   }
   .noterow input::placeholder { color:var(--ink-3); }
+  .noterow input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(91,157,255,0.16); }
   .btnrow { display:flex; gap:10px; }
   .btnrow button {
-    flex:1; border-radius:17px; padding:15px 0; font-size:21px; font-weight:700;
+    flex:1; border-radius:var(--radius-lg); padding:15px 0; font-size:21px; font-weight:700;
     background:var(--surface); border:1px solid var(--line-2); color:var(--ink); cursor:pointer;
-    transition:transform 0.08s ease;
+    box-shadow:var(--shadow-1); transition:transform 0.1s var(--ease-out), box-shadow 0.1s var(--ease-out);
   }
-  .btnrow button:active { transform:scale(0.94); }
+  .btnrow button:active { transform:scale(0.94); box-shadow:none; }
   .btnrow .b-pass { color:var(--pass); }
   .btnrow .b-unsure { color:var(--unsure); font-size:18px; }
   .btnrow .b-buy { color:var(--buy); }
@@ -213,43 +267,48 @@
   /* ---------- reject reason sheet ---------- */
   .sheet {
     position:fixed; left:0; right:0; bottom:0; z-index:60; background:var(--surface);
-    border-top:1px solid var(--line-2); border-radius:22px 22px 0 0;
-    padding:16px 16px calc(16px + var(--safe-b)); box-shadow:0 -14px 40px rgba(0,0,0,0.5);
-    transform:translateY(110%); transition:transform 0.26s cubic-bezier(0.32,0.72,0,1);
+    border-top:1px solid var(--line-2); border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+    padding:var(--sp-4) var(--sp-4) calc(var(--sp-4) + var(--safe-b)); box-shadow:var(--shadow-3);
+    transform:translateY(110%); transition:transform 0.28s var(--ease-out);
     max-height:82vh; overflow-y:auto;
   }
   .sheet.up { transform:translateY(0); }
-  .sheet-h { display:flex; align-items:center; margin-bottom:12px; gap:10px; }
+  .sheet-h { display:flex; align-items:center; margin-bottom:var(--sp-3); gap:10px; }
   .sheet-h .t { font-size:15px; font-weight:700; flex:1; }
-  .chips { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:13px; }
+  .chips { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:var(--sp-3); }
   .chip {
     background:var(--surface-2); border:1px solid var(--line-2); color:var(--ink-2);
-    border-radius:999px; padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer;
+    border-radius:var(--radius-pill); padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer;
+    transition:background 0.15s var(--ease-out), border-color 0.15s var(--ease-out), color 0.15s var(--ease-out), transform 0.1s var(--ease-out);
   }
+  .chip:active { transform:scale(0.95); }
   .chip.on { background:var(--accent); border-color:var(--accent); color:#03142b; }
-  .blockbox { background:var(--surface-2); border:1px solid var(--line); border-radius:14px; padding:12px 13px; margin-bottom:12px; }
+  .blockbox { background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius-md); padding:12px 13px; margin-bottom:var(--sp-3); }
   .switchrow { display:flex; align-items:center; gap:12px; }
   .switchrow + .switchrow { margin-top:11px; padding-top:11px; border-top:1px solid var(--line); }
   .switchrow .lbl { flex:1; font-size:13.5px; line-height:1.35; }
   .switchrow .sub { font-size:11.5px; color:var(--ink-3); margin-top:2px; }
   .switch {
-    flex:0 0 auto; width:46px; height:27px; border-radius:999px; background:var(--surface-3);
-    border:1px solid var(--line-2); position:relative; cursor:pointer; transition:background 0.15s;
+    flex:0 0 auto; width:46px; height:27px; border-radius:var(--radius-pill); background:var(--surface-3);
+    border:1px solid var(--line-2); position:relative; cursor:pointer; transition:background 0.18s var(--ease-out), border-color 0.18s var(--ease-out);
   }
   .switch::after {
     content:''; position:absolute; top:2px; left:2px; width:21px; height:21px; border-radius:50%;
-    background:var(--ink-2); transition:transform 0.18s cubic-bezier(0.3,0.7,0,1), background 0.15s;
+    background:var(--ink-2); box-shadow:0 1px 3px rgba(0,0,0,0.25);
+    transition:transform 0.22s var(--ease-out), background 0.18s var(--ease-out);
   }
   .switch.on { background:var(--pass); border-color:var(--pass); }
   .switch.on::after { transform:translateX(19px); background:#fff; }
   .switch.dim { opacity:0.4; pointer-events:none; }
   .sheet .save {
-    width:100%; background:var(--accent); color:#03142b; border:none; border-radius:14px;
+    width:100%; background:var(--accent); color:#03142b; border:none; border-radius:var(--radius-md);
     padding:14px; font-size:15px; font-weight:700; cursor:pointer;
+    transition:transform 0.1s var(--ease-out), opacity 0.1s var(--ease-out);
   }
+  .sheet .save:active { transform:scale(0.98); opacity:0.9; }
   .backdrop {
     position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:55; opacity:0;
-    pointer-events:none; transition:opacity 0.24s;
+    pointer-events:none; transition:opacity 0.24s var(--ease-out);
   }
   .backdrop.on { opacity:1; pointer-events:auto; }
 
@@ -266,30 +325,38 @@
   /* ---------- lists (buys / history / blocked) ---------- */
   .row {
     display:flex; gap:12px; background:var(--surface); border:1px solid var(--line);
-    border-radius:16px; padding:11px; margin-bottom:10px;
+    border-radius:var(--radius-lg); padding:var(--sp-3); margin-bottom:var(--sp-2);
+    box-shadow:var(--shadow-1); transition:box-shadow 0.15s var(--ease-out);
   }
-  .row img { width:62px; height:62px; border-radius:11px; object-fit:cover; background:var(--surface-3); flex:0 0 auto; }
-  .row .noimg { width:62px; height:62px; border-radius:11px; background:var(--surface-3); flex:0 0 auto; }
+  .row img { width:62px; height:62px; border-radius:var(--radius-sm); object-fit:cover; background:var(--surface-3); flex:0 0 auto; }
+  .row .noimg { width:62px; height:62px; border-radius:var(--radius-sm); background:var(--surface-3); flex:0 0 auto; }
   .row .info { flex:1; min-width:0; }
-  .row .t { font-size:14px; font-weight:640; line-height:1.3; margin-bottom:3px;
+  .row .t { font-size:14px; font-weight:640; line-height:1.35; margin-bottom:3px;
             display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .row .m { font-size:12px; color:var(--ink-3); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-  .tag { font-size:10px; font-weight:800; padding:3px 7px; border-radius:6px; letter-spacing:0.04em; }
+  .tag { font-size:10px; font-weight:800; padding:3px 7px; border-radius:var(--radius-xs); letter-spacing:0.04em; }
   .tag.BUY { background:rgba(55,211,153,0.16); color:var(--buy); }
   .tag.PASS { background:rgba(242,96,76,0.16); color:var(--pass); }
   .tag.UNSURE { background:rgba(245,181,68,0.16); color:var(--unsure); }
-  .note { font-size:12.5px; color:var(--ink-2); margin-top:6px; font-style:italic; line-height:1.4; }
-  .filters { display:flex; gap:7px; margin-bottom:14px; flex-wrap:wrap; }
+  .note { font-size:12.5px; color:var(--ink-2); margin-top:6px; font-style:italic; line-height:1.45; }
+  .filters { display:flex; gap:7px; margin-bottom:var(--sp-4); flex-wrap:wrap; }
   .empty { text-align:center; color:var(--ink-3); padding:56px 26px; font-size:14px; line-height:1.6; }
   .empty .big { font-size:38px; margin-bottom:12px; }
-  .linkbtn { background:none; border:none; color:var(--accent); font-size:12.5px; font-weight:600; cursor:pointer; padding:0; }
+  .linkbtn {
+    background:none; border:none; color:var(--accent); font-size:12.5px; font-weight:600; cursor:pointer; padding:0;
+    transition:opacity 0.12s var(--ease-out);
+  }
+  .linkbtn:active { opacity:0.6; }
   .dangerbtn {
     background:rgba(242,96,76,0.12); border:1px solid rgba(242,96,76,0.3); color:var(--pass);
-    border-radius:10px; padding:7px 12px; font-size:12.5px; font-weight:650; cursor:pointer;
+    border-radius:var(--radius-sm); padding:7px 12px; font-size:12.5px; font-weight:650; cursor:pointer;
+    transition:transform 0.1s var(--ease-out), background 0.15s var(--ease-out);
   }
-  .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
+  .dangerbtn:active { transform:scale(0.95); }
+  .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3); margin-bottom:var(--sp-5); }
   .stat {
-    background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:14px;
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg); padding:var(--sp-4);
+    box-shadow:var(--shadow-1);
   }
   .stat .n { font-size:26px; font-weight:750; font-variant-numeric:tabular-nums; letter-spacing:-0.02em; }
   .stat .l { font-size:11.5px; color:var(--ink-3); margin-top:2px; font-weight:600; }
@@ -299,10 +366,21 @@
   .toast {
     position:fixed; left:50%; bottom:calc(84px + var(--safe-b)); transform:translateX(-50%) translateY(20px);
     background:var(--surface-3); border:1px solid var(--line-2); color:var(--ink);
-    padding:11px 18px; border-radius:999px; font-size:13.5px; font-weight:600; z-index:90;
-    opacity:0; transition:all 0.25s; pointer-events:none; white-space:nowrap; max-width:90vw;
+    padding:11px 18px; border-radius:var(--radius-pill); font-size:13.5px; font-weight:600; z-index:90;
+    opacity:0; box-shadow:var(--shadow-2);
+    transition:opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out);
+    pointer-events:none; white-space:nowrap; max-width:90vw;
   }
   .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ---------- settings inputs (shared by search box, per-model list, settings form) ---------- */
+  .field-input {
+    width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius-sm);
+    color:var(--ink); padding:11px 12px; font-size:14px; font-family:inherit;
+    transition:border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
+  }
+  .field-input::placeholder { color:var(--ink-3); }
+  .field-input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(91,157,255,0.16); }
 </style>
 </head>
 <body>
@@ -889,20 +967,17 @@ function settingField(def, value){
   if (def.type === 'bool') {
     const on = value === '1' || value === 'true';
     return `<div class="switchrow" style="background:var(--surface);border:1px solid var(--line);
-                 border-radius:14px;padding:13px;margin-bottom:10px">
+                 border-radius:var(--radius-md);padding:13px;margin-bottom:10px">
       <div class="lbl">${esc(def.label)}<div class="sub">${esc(def.help)}</div></div>
       <div class="switch ${on ? 'on' : ''}" data-toggle-setting="${esc(def.key)}"
            data-value="${on ? '1' : '0'}"></div>
     </div>`;
   }
   const input = def.type === 'lines'
-    ? `<textarea id="${id}" data-setting="${esc(def.key)}" rows="7"
-         style="width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;
-                color:var(--ink);padding:11px 12px;font-size:14px;font-family:inherit;resize:vertical;
-                line-height:1.5">${esc(value)}</textarea>`
-    : `<input id="${id}" data-setting="${esc(def.key)}" type="number" step="any" value="${esc(value)}"
-         style="width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;
-                color:var(--ink);padding:11px 12px;font-size:15px;font-family:inherit">`;
+    ? `<textarea id="${id}" class="field-input" data-setting="${esc(def.key)}" rows="7"
+         style="resize:vertical;line-height:1.5">${esc(value)}</textarea>`
+    : `<input id="${id}" class="field-input" data-setting="${esc(def.key)}" type="number" step="any" value="${esc(value)}"
+         style="font-size:15px">`;
   return `<div style="margin-bottom:14px">
       <div style="font-size:13.5px;font-weight:650;margin-bottom:3px">${esc(def.label)}</div>
       <div style="font-size:11.5px;color:var(--ink-3);margin-bottom:7px;line-height:1.45">${esc(def.help)}</div>
@@ -925,9 +1000,7 @@ async function loadSetup(){
     <div class="sec">
       <div class="sec-h">Why isn't a listing showing up?</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
-        <input id="lookupQ" placeholder="e.g. DSC-W120"
-          style="flex:1;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;
-                 color:var(--ink);padding:11px 12px;font-size:14px;font-family:inherit;min-width:0">
+        <input id="lookupQ" class="field-input" placeholder="e.g. DSC-W120" style="flex:1;min-width:0">
         <button class="showmore" id="lookupGo" style="width:auto;padding:0 18px">Check</button>
       </div>
       <div id="lookupOut" style="font-size:13px;color:var(--ink-3);line-height:1.55">
@@ -939,9 +1012,7 @@ async function loadSetup(){
     <div class="sec">
       <div class="sec-h">Search settings</div>
       <div id="settingsForm">${cfg.defs.map(d => settingField(d, cfg.values[d.key])).join('')}</div>
-      <button class="save" id="saveSettings"
-        style="width:100%;background:var(--accent);color:#03142b;border:none;border-radius:14px;
-               padding:14px;font-size:15px;font-weight:700;cursor:pointer">Save settings</button>
+      <button class="save" id="saveSettings" style="width:100%">Save settings</button>
       <div style="font-size:11.5px;color:var(--ink-3);margin-top:8px;line-height:1.5">
         Saved instantly to the database — no restart, no redeploy. The scanner picks up
         changes on its next run; tap the ⟳ button up top to apply them right now.
@@ -955,6 +1026,10 @@ async function loadSetup(){
         against the single "assumed resale" number above — which is usually why an
         unfamiliar model gets scored PASS. Fill these in and the scoring gets far sharper.
       </div>
+      <input id="camSearch" class="field-input" placeholder="Search models…" style="margin-bottom:8px">
+      <div class="chips" style="margin-bottom:10px">
+        <button class="chip" id="camFilterUnknown">Show only models needing resale data</button>
+      </div>
       <div id="camList"></div>
       <button class="showmore" id="btnRescore" style="margin-top:4px">Re-score my queue with these values</button>
       <div style="font-size:11.5px;color:var(--ink-3);margin-top:7px;line-height:1.5">
@@ -965,15 +1040,15 @@ async function loadSetup(){
 
     <div class="sec">
       <div class="sec-h">eBay API usage today</div>
-      <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px">
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-md);padding:13px;box-shadow:var(--shadow-1)">
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
           <span style="font-size:20px;font-weight:700;font-variant-numeric:tabular-nums">
             ${s.api_calls_today} <span style="font-size:13px;color:var(--ink-3);font-weight:600">/ ${s.api_budget}</span>
           </span>
           <span style="font-size:11.5px;color:var(--ink-3)">resets midnight UTC</span>
         </div>
-        <div style="height:7px;background:var(--surface-3);border-radius:999px;overflow:hidden">
-          <div style="height:100%;width:${usedPct}%;background:${usedPct > 85 ? 'var(--pass)' : 'var(--buy)'}"></div>
+        <div style="height:7px;background:var(--surface-3);border-radius:var(--radius-pill);overflow:hidden">
+          <div style="height:100%;width:${usedPct}%;background:${usedPct > 85 ? 'var(--pass)' : 'var(--buy)'};transition:width 0.3s var(--ease-out)"></div>
         </div>
         <div style="font-size:11.5px;color:var(--ink-3);margin-top:8px;line-height:1.5">
           eBay's hard limit is ${s.api_hard_limit}/day. Scanning stops itself at your budget
@@ -1064,40 +1139,62 @@ async function loadSetup(){
   };
 }
 
-async function loadCameras(){
-  const d = await fetch('/api/cameras').then(r => r.json());
+// Fetched-once list + client-side filter state for the "Resale values per
+// model" section — search box and "needing resale data" chip both filter
+// this in-memory array, no extra API calls (see docs/ROADMAP.md: filling in
+// resale values is the single biggest lever on scoring quality, so this
+// list needs to be quick to search without a lot of scrolling).
+let camData = null;          // { items, default_resale } from /api/cameras
+let camSearchText = '';
+let camOnlyUnknown = false;
+
+function camCardHtml(c, defaultResale){
+  const known = c.resale_low != null && c.resale_high != null && (c.resale_low || c.resale_high);
+  return `<div style="background:var(--surface);border:1px solid ${known ? 'var(--line)' : 'rgba(245,181,68,0.35)'};
+              border-radius:var(--radius-md);padding:11px;margin-bottom:8px;box-shadow:var(--shadow-1)">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px">
+      <span style="font-size:13.5px;font-weight:640;line-height:1.3">${esc(c.model)}</span>
+      <span style="font-size:11px;color:var(--ink-3);white-space:nowrap">${c.listings} seen</span>
+    </div>
+    ${known ? '' : `<div style="font-size:11px;color:var(--unsure);margin-bottom:7px">
+        No resale data — scored against £${defaultResale}</div>`}
+    <div style="display:flex;gap:7px;align-items:center">
+      <input type="number" step="any" placeholder="low" value="${c.resale_low != null ? c.resale_low : ''}"
+        data-cam="${esc(c.model)}" data-field="low"
+        style="flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--line);
+               border-radius:var(--radius-xs);color:var(--ink);padding:8px 10px;font-size:14px">
+      <span style="color:var(--ink-3);font-size:13px">to</span>
+      <input type="number" step="any" placeholder="high" value="${c.resale_high != null ? c.resale_high : ''}"
+        data-cam="${esc(c.model)}" data-field="high"
+        style="flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--line);
+               border-radius:var(--radius-xs);color:var(--ink);padding:8px 10px;font-size:14px">
+      <button class="linkbtn" data-savecam="${esc(c.model)}"
+        style="padding:8px 10px;font-weight:650">Save</button>
+    </div>
+  </div>`;
+}
+
+function renderCamList(){
   const box = $('#camList');
-  if (!box) return;
-  if (!d.items.length) {
+  if (!box || !camData) return;
+  if (!camData.items.length) {
     box.innerHTML = `<div style="color:var(--ink-3);font-size:13px;padding-bottom:8px">
       No models seen yet — run a scan first.</div>`;
     return;
   }
-  box.innerHTML = d.items.map(c => {
-    const known = c.resale_low != null && c.resale_high != null && (c.resale_low || c.resale_high);
-    return `<div style="background:var(--surface);border:1px solid ${known ? 'var(--line)' : 'rgba(245,181,68,0.35)'};
-                border-radius:13px;padding:11px;margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px">
-        <span style="font-size:13.5px;font-weight:640;line-height:1.3">${esc(c.model)}</span>
-        <span style="font-size:11px;color:var(--ink-3);white-space:nowrap">${c.listings} seen</span>
-      </div>
-      ${known ? '' : `<div style="font-size:11px;color:var(--unsure);margin-bottom:7px">
-          No resale data — scored against £${d.default_resale}</div>`}
-      <div style="display:flex;gap:7px;align-items:center">
-        <input type="number" step="any" placeholder="low" value="${c.resale_low != null ? c.resale_low : ''}"
-          data-cam="${esc(c.model)}" data-field="low"
-          style="flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--line);
-                 border-radius:9px;color:var(--ink);padding:8px 10px;font-size:14px">
-        <span style="color:var(--ink-3);font-size:13px">to</span>
-        <input type="number" step="any" placeholder="high" value="${c.resale_high != null ? c.resale_high : ''}"
-          data-cam="${esc(c.model)}" data-field="high"
-          style="flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--line);
-                 border-radius:9px;color:var(--ink);padding:8px 10px;font-size:14px">
-        <button class="linkbtn" data-savecam="${esc(c.model)}"
-          style="padding:8px 10px;font-weight:650">Save</button>
-      </div>
-    </div>`;
-  }).join('');
+  const q = camSearchText.trim().toLowerCase();
+  let items = camData.items;
+  if (q) items = items.filter(c => (c.model || '').toLowerCase().includes(q));
+  if (camOnlyUnknown) items = items.filter(c =>
+    !(c.resale_low != null && c.resale_high != null && (c.resale_low || c.resale_high)));
+
+  if (!items.length) {
+    box.innerHTML = `<div style="color:var(--ink-3);font-size:13px;padding:8px 0">
+      No models match${q ? ` “${esc(camSearchText.trim())}”` : ''}${camOnlyUnknown ? ' — everything visible already has resale data' : ''}.</div>`;
+    return;
+  }
+
+  box.innerHTML = items.map(c => camCardHtml(c, camData.default_resale)).join('');
 
   box.querySelectorAll('[data-savecam]').forEach(btn => {
     btn.onclick = async () => {
@@ -1111,6 +1208,28 @@ async function loadCameras(){
       loadCameras();
     };
   });
+}
+
+async function loadCameras(){
+  const d = await fetch('/api/cameras').then(r => r.json());
+  camData = d;
+
+  const search = $('#camSearch');
+  if (search) {
+    search.value = camSearchText;
+    search.oninput = () => { camSearchText = search.value; renderCamList(); };
+  }
+  const chip = $('#camFilterUnknown');
+  if (chip) {
+    chip.classList.toggle('on', camOnlyUnknown);
+    chip.onclick = () => {
+      camOnlyUnknown = !camOnlyUnknown;
+      chip.classList.toggle('on', camOnlyUnknown);
+      renderCamList();
+    };
+  }
+
+  renderCamList();
 }
 
 async function doLookup(){
