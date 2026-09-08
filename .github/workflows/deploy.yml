@@ -20,20 +20,30 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
+          command_timeout: 2m
           script: |
             set -e
+            echo "STEP: checking for git"
             if ! command -v git &> /dev/null; then
-              sudo timeout 60 dnf install -y git < /dev/null
+              echo "STEP: installing git (sudo -n = fail fast if password needed)"
+              sudo -n dnf install -y git < /dev/null
             fi
+            echo "STEP: cd into project"
             cd ~/camera-flipper
             if [ ! -d .git ]; then
+              echo "STEP: git init + remote add"
               git init
               git remote add origin https://github.com/joenamcoutinho/camera-flipper.git
             fi
+            echo "STEP: git fetch"
             git fetch origin main
+            echo "STEP: git reset --hard"
             git reset --hard origin/main
+            echo "STEP: pip install"
             source venv/bin/activate
             pip install -q -r requirements.txt
+            echo "STEP: rescore"
             python rescore.py
+            echo "STEP: restart service"
             sudo systemctl restart camera-flipper
             echo "Deployment complete"
