@@ -21,8 +21,17 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
+            set -e
+            if ! command -v git &> /dev/null; then
+              sudo dnf install -y git
+            fi
             cd ~/camera-flipper
-            git pull origin main
+            if [ ! -d .git ]; then
+              git init
+              git remote add origin https://github.com/joenamcoutinho/camera-flipper.git
+            fi
+            git fetch origin main
+            git reset --hard origin/main
             source venv/bin/activate
             pip install -q -r requirements.txt
             python rescore.py
