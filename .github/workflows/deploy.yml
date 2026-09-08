@@ -9,35 +9,39 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     environment:
       name: production
       url: http://145.241.226.235:8000
 
     steps:
-      - name: Deploy to Oracle VM
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          command_timeout: 2m
-          script: |
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/vm_key
+          chmod 600 ~/.ssh/vm_key
+          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy
+        run: |
+          ssh -i ~/.ssh/vm_key -o ConnectTimeout=15 -o BatchMode=yes \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} '
             set -e
             echo "STEP: checking for git"
-            if ! command -v git &> /dev/null; then
-              echo "STEP: installing git (sudo -n = fail fast if password needed)"
+            if ! command -v git >/dev/null 2>&1; then
+              echo "STEP: installing git"
               sudo -n dnf install -y git < /dev/null
             fi
-            echo "STEP: cd into project"
+            echo "STEP: cd project"
             cd ~/camera-flipper
             if [ ! -d .git ]; then
-              echo "STEP: git init + remote add"
+              echo "STEP: git init + remote"
               git init
               git remote add origin https://github.com/joenamcoutinho/camera-flipper.git
             fi
-            echo "STEP: git fetch"
+            echo "STEP: fetch"
             git fetch origin main
-            echo "STEP: git reset --hard"
+            echo "STEP: reset --hard"
             git reset --hard origin/main
             echo "STEP: pip install"
             source venv/bin/activate
@@ -47,3 +51,4 @@ jobs:
             echo "STEP: restart service"
             sudo systemctl restart camera-flipper
             echo "Deployment complete"
+          '
