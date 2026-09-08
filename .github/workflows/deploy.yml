@@ -23,7 +23,7 @@ jobs:
           script: |
             set -e
             if ! command -v git &> /dev/null; then
-              sudo dnf install -y git
+              sudo timeout 60 dnf install -y git < /dev/null
             fi
             cd ~/camera-flipper
             if [ ! -d .git ]; then
